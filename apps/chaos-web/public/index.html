@@ -263,6 +263,46 @@
         }
       }
 
+      /* Energetic Run Scenario Button - Apple Vibrant Emerald Horizon Gradient */
+      .btn-run-scenario {
+        background: linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%) !important;
+        color: #ffffff !important;
+        border: 1.5px solid rgba(52, 211, 153, 0.7) !important;
+        font-family: var(--font-sans);
+        font-weight: 700 !important;
+        font-size: 0.82rem !important;
+        letter-spacing: 0.01em !important;
+        padding: 0.52rem 1.35rem !important;
+        border-radius: 9999px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        cursor: pointer !important;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 14px rgba(0, 0, 0, 0.7) !important;
+        animation: run-btn-pulse 2.4s infinite ease-in-out;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      }
+
+      .btn-run-scenario:hover:not(:disabled) {
+        background: linear-gradient(135deg, #34d399 0%, #10b981 60%, #059669 100%) !important;
+        border-color: #6ee7b7 !important;
+        transform: translateY(-1px) scale(1.04) !important;
+        box-shadow: 0 0 32px rgba(16, 185, 129, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 6px 20px rgba(0, 0, 0, 0.9) !important;
+      }
+
+      .btn-run-scenario:active:not(:disabled) {
+        transform: translateY(0) scale(0.98) !important;
+      }
+
+      @keyframes run-btn-pulse {
+        0%, 100% {
+          box-shadow: 0 0 16px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 14px rgba(0, 0, 0, 0.7);
+        }
+        50% {
+          box-shadow: 0 0 28px rgba(16, 185, 129, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 18px rgba(0, 0, 0, 0.85);
+        }
+      }
+
       .btn-pill:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -1958,14 +1998,13 @@
                     ${isRunning ? '<span class="status-pulse-dot status-ruby" style="width: 9px; height: 9px; animation: pulse-alert 0.8s infinite;"></span> <strong style="color: #ff4d6d; letter-spacing: 0.05em;">FAULT ACTIVE</strong>' : '● Ready / Idle'}
                   </span>
                   <button
-                    class="${isRunning ? 'btn-stop-fault' : 'btn-pill btn-pill-primary'}"
-                    style="${isRunning ? '' : 'padding: 0.45rem 1.1rem; font-size: 0.78rem;'}"
+                    class="${isRunning ? 'btn-stop-fault' : 'btn-run-scenario'}"
                     onclick="${isRunning ? `stopScenario('${sId}')` : `startScenario('${sId}')`}"
                   >
                     ${
                       isRunning
                         ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="4"/></svg><span>Stop Fault</span>`
-                        : `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg><span>Run Scenario</span>`
+                        : `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg><span>Run Scenario</span>`
                     }
                   </button>
                 </div>
