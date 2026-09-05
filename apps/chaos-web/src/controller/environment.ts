@@ -14,7 +14,8 @@ import { getRepoRoot } from '../utils/paths.js';
 
 const execAsync = promisify(exec);
 
-const CHECKOUT_URL = process.env['CHECKOUT_URL'] ?? 'http://127.0.0.1:3001';
+const CHECKOUT_URL =
+  process.env['CHECKOUT_URL'] || process.env['CHECKOUT_SERVICE_URL'] || 'http://127.0.0.1:3001';
 const PAYMENT_PROVIDER_URL = process.env['PAYMENT_PROVIDER_URL'] ?? 'http://127.0.0.1:3002';
 const MONGODB_URI = process.env['MONGODB_URI'] ?? 'mongodb://127.0.0.1:27017/acme';
 const DB_NAME = process.env['MONGODB_DATABASE'] ?? 'acme';

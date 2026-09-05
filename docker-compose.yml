@@ -21,27 +21,29 @@ services:
       start_period: 10s
 
   # ============================================================================
-  # Future Service Definitions (Ready for containerization when apps mature)
+  # Acme Checkout Service (acme-checkout)
   # ============================================================================
-
-  # checkout:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/checkout/Dockerfile
-  #   container_name: chaos-checkout
-  #   ports:
-  #     - "${CHECKOUT_PORT:-3001}:3001"
-  #   environment:
-  #     - NODE_ENV=development
-  #     - CHECKOUT_PORT=3001
-  #     - MONGODB_URI=mongodb://mongodb:27017/acme
-  #     - PAYMENT_PROVIDER_URL=http://payment-provider:3002
-  #   depends_on:
-  #     mongodb:
-  #       condition: service_healthy
+  checkout:
+    build:
+      context: .
+      dockerfile: apps/checkout/Dockerfile
+    container_name: chaos-checkout
+    restart: unless-stopped
+    ports:
+      - "${CHECKOUT_PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - CHECKOUT_PORT=3001
+      - MONGODB_URI=mongodb://mongodb:27017/acme
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-acme}
+      - PAYMENT_PROVIDER_URL=http://payment-provider:3002
+      - WEBHOOK_TIMEOUT_MS=800
+    depends_on:
+      mongodb:
+        condition: service_healthy
 
   # ============================================================================
-  # External Payment Provider Simulator
+  # External Payment Provider Simulator (fake-payment-provider)
   # ============================================================================
   payment-provider:
     build:
@@ -52,23 +54,39 @@ services:
     ports:
       - "${PAYMENT_PROVIDER_PORT:-3002}:3002"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PAYMENT_PROVIDER_PORT=3002
-      # In Docker network, use service name 'checkout'. For local host development, use localhost/127.0.0.1.
-      - CHECKOUT_WEBHOOK_URL=${CHECKOUT_WEBHOOK_URL:-http://checkout:3001/webhooks/payment-confirmed}
+      - CHECKOUT_WEBHOOK_URL=http://checkout:3001/webhooks/payment-confirmed
+    depends_on:
+      checkout:
+        condition: service_started
 
-  # chaos-web:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/chaos-web/Dockerfile
-  #   container_name: chaos-web
-  #   ports:
-  #     - "${CHAOS_WEB_PORT:-3000}:3000"
-  #   environment:
-  #     - NODE_ENV=development
-  #     - CHAOS_WEB_PORT=3000
-  #     - CHECKOUT_SERVICE_URL=http://checkout:3001
-  #     - PAYMENT_PROVIDER_URL=http://payment-provider:3002
+  # ============================================================================
+  # Chaos Web Dashboard & Control Plane (chaos-web)
+  # ============================================================================
+  chaos-web:
+    build:
+      context: .
+      dockerfile: apps/chaos-web/Dockerfile
+    container_name: chaos-web
+    restart: unless-stopped
+    ports:
+      - "${CHAOS_WEB_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - CHAOS_WEB_PORT=3000
+      - CHECKOUT_URL=http://checkout:3001
+      - CHECKOUT_SERVICE_URL=http://checkout:3001
+      - PAYMENT_PROVIDER_URL=http://payment-provider:3002
+      - MONGODB_URI=mongodb://mongodb:27017/acme
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-acme}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      checkout:
+        condition: service_started
+      payment-provider:
+        condition: service_started
 
 # ==============================================================================
 # Persistent Named Volumes

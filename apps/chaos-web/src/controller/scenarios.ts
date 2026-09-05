@@ -232,9 +232,17 @@ export async function startScenario(id: string): Promise<{ scenario: ChaosScenar
 
   // Scenario 5: Traffic Surge
   if (id === 'traffic-surge') {
+    const exp = await experimentRegistry.createExperiment({
+      name: 'Scenario: Traffic Surge Burst',
+      target: 'acme-checkout',
+      failureType: 'traffic_surge',
+      params: { concurrency: 25, totalRequests: 300 },
+      durationSeconds: 30,
+    });
+
     activeScenarios.set(id, {
       scenarioId: id,
-      experimentIds: [],
+      experimentIds: [exp.id],
       isRunning: true,
       startedAt: new Date().toISOString(),
     });
@@ -243,7 +251,7 @@ export async function startScenario(id: string): Promise<{ scenario: ChaosScenar
     (async () => {
       try {
         logActivity('info', '[Traffic Surge] Dispatching controlled traffic burst (25 workers, 300 requests)...');
-        await execAsync('BREAK_TOTAL_REQUESTS=300 BREAK_CONCURRENCY=25 pnpm break');
+        await execAsync('BREAK_TOTAL_REQUESTS=300 BREAK_CONCURRENCY=25 pnpm break', { cwd: getRepoRoot() });
         logActivity('success', '[Traffic Surge] Traffic burst completed.');
       } catch (err) {
         logActivity('error', `[Traffic Surge] Error: ${err instanceof Error ? err.message : String(err)}`);

@@ -877,6 +877,16 @@
         }
       }
 
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
       async function fetchScenarios() {
         try {
           const res = await fetch('/api/scenarios');
@@ -888,18 +898,22 @@
           container.innerHTML = otherScenarios
             .map((s) => {
               const isRunning = s.status === 'running';
+              const sId = escapeHtml(s.id);
+              const sName = escapeHtml(s.name);
+              const sTarget = escapeHtml(s.target);
+              const sDesc = escapeHtml(s.description);
               return `
               <div class="scenario-card">
                 <div>
                   <div class="scenario-header">
-                    <span class="scenario-name">${s.name}</span>
-                    <span class="scenario-target">${s.target}</span>
+                    <span class="scenario-name">${sName}</span>
+                    <span class="scenario-target">${sTarget}</span>
                   </div>
-                  <p class="scenario-desc">${s.description}</p>
+                  <p class="scenario-desc">${sDesc}</p>
                 </div>
                 <button
                   class="btn ${isRunning ? 'btn-outline-danger' : 'btn-secondary'}"
-                  onclick="${isRunning ? `stopScenario('${s.id}')` : `startScenario('${s.id}')`}"
+                  onclick="${isRunning ? `stopScenario('${sId}')` : `startScenario('${sId}')`}"
                 >
                   <span>${isRunning ? '⏹️' : '▶️'}</span> ${isRunning ? 'Stop Scenario' : 'Start Scenario'}
                 </button>
@@ -944,11 +958,11 @@
                   .map(
                     (e) => `
                   <tr>
-                    <td style="font-weight: 600">${e.failureType}</td>
-                    <td><code>${e.target}</code></td>
+                    <td style="font-weight: 600">${escapeHtml(e.failureType)}</td>
+                    <td><code>${escapeHtml(e.target)}</code></td>
                     <td><span class="badge-running">RUNNING</span></td>
                     <td>
-                      <button class="btn btn-outline-danger" style="padding: 0.2rem 0.6rem; font-size: 0.75rem" onclick="stopExperiment('${e.id}')">
+                      <button class="btn btn-outline-danger" style="padding: 0.2rem 0.6rem; font-size: 0.75rem" onclick="stopExperiment('${escapeHtml(e.id)}')">
                         Stop
                       </button>
                     </td>
@@ -978,8 +992,8 @@
             .map(
               (item) => `
               <div class="activity-item">
-                <span class="activity-time">${item.timestamp}</span>
-                <span class="activity-msg">${item.message}</span>
+                <span class="activity-time">${escapeHtml(item.timestamp)}</span>
+                <span class="activity-msg">${escapeHtml(item.message)}</span>
               </div>
             `
             )
