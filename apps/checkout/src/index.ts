@@ -1,12 +1,7 @@
 import http from 'node:http';
-import {
-  createHealthReport,
-  initDatabase,
-  checkDatabaseConnectivity,
-  closeDatabase,
-  type ServiceHealth,
-} from '@chaos/shared';
+import { initDatabase, closeDatabase } from '@chaos/shared';
 import { loadConfig } from './config.js';
+import { createApp } from './app.js';
 
 const startTime = Date.now();
 const config = loadConfig();
@@ -26,84 +21,9 @@ initDatabase({
     console.warn(`[acme-checkout] Initial MongoDB connection not established (${msg}). Will connect on probe.`);
   });
 
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
-
-  res.setHeader('Content-Type', 'application/json');
-
-  // Health check endpoint with real lightweight MongoDB ping
-  if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname === '/health') {
-    const baseHealth = createHealthReport('acme-checkout', startTime);
-
-    // If client wasn't connected initially, attempt connection
-    let dbHealth = await checkDatabaseConnectivity(2000);
-    if (dbHealth.status !== 'ok') {
-      try {
-        await initDatabase({
-          uri: config.mongoUri,
-          dbName: config.mongoDatabase,
-          serverSelectionTimeoutMS: 2000,
-          connectTimeoutMS: 2000,
-        });
-        dbHealth = await checkDatabaseConnectivity(2000);
-      } catch {
-        // Handled below via dbHealth
-      }
-    }
-
-    const isHealthy = dbHealth.status === 'ok';
-    const statusCode = isHealthy ? 200 : 503;
-
-    const responsePayload: ServiceHealth = {
-      ...baseHealth,
-      status: isHealthy ? 'ok' : 'degraded',
-      database: dbHealth.status,
-      databaseDetails: {
-        status: dbHealth.status,
-        database: config.mongoDatabase,
-        latencyMs: dbHealth.latencyMs,
-        ...(dbHealth.error ? { error: dbHealth.error } : {}),
-      },
-    };
-
-    res.writeHead(statusCode);
-    if (req.method === 'HEAD') {
-      res.end();
-    } else {
-      res.end(JSON.stringify(responsePayload));
-    }
-    return;
-  }
-
-  // Root endpoint info
-  if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname === '/') {
-    res.writeHead(200);
-    if (req.method === 'HEAD') {
-      res.end();
-    } else {
-      res.end(
-        JSON.stringify({
-          name: 'acme-checkout',
-          version: '0.1.0',
-          status: 'running',
-          endpoints: ['/health'],
-        })
-      );
-    }
-    return;
-  }
-
-  // 404 for unhandled routes
-  res.writeHead(404);
-  res.end(
-    JSON.stringify({
-      error: {
-        code: 'NOT_FOUND',
-        message: `Route not found: ${req.method} ${url.pathname}`,
-      },
-    })
-  );
-});
+// Create application request handler and server
+const app = createApp(config, startTime);
+const server = http.createServer(app);
 
 // Start listening
 server.listen(config.port, () => {
@@ -152,4 +72,4 @@ process.on('SIGTERM', () => {
   void shutdown('SIGTERM');
 });
 
-export { server, config };
+export { server, config, app };

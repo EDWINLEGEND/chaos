@@ -17,9 +17,9 @@ export function loadConfig(): CheckoutConfig {
     throw new Error(`Invalid CHECKOUT_PORT: ${process.env['CHECKOUT_PORT']}`);
   }
 
-  const mongoUri = process.env['MONGODB_URI'] ?? 'mongodb://localhost:27017/acme';
+  const mongoUri = process.env['MONGODB_URI'] ?? 'mongodb://127.0.0.1:27017/acme';
   const mongoDatabase = process.env['MONGODB_DATABASE'] ?? 'acme';
-  const paymentProviderUrl = process.env['PAYMENT_PROVIDER_URL'] ?? 'http://localhost:3002';
+  const paymentProviderUrl = process.env['PAYMENT_PROVIDER_URL'] ?? 'http://127.0.0.1:3002';
 
   return {
     nodeEnv,

@@ -23,6 +23,17 @@ export interface OrderDocument {
 }
 
 /**
+ * Input parameters required to create an order.
+ * Money amount is represented as minor currency units (e.g. integer cents: 4999 = $49.99).
+ */
+export interface CreateOrderInput {
+  userId: string;
+  paymentId: string;
+  amount: number;
+  status?: OrderStatus;
+}
+
+/**
  * Webhook event document shape stored in MongoDB `webhook_events` collection.
  * Used by OpsRoom reconciliation probes to compare received payment events against created orders.
  */
