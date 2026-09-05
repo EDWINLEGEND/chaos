@@ -88,9 +88,66 @@ services:
       payment-provider:
         condition: service_started
 
+  # ============================================================================
+  # Prometheus Time-Series Metrics Engine
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: chaos-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    depends_on:
+      checkout:
+        condition: service_started
+      payment-provider:
+        condition: service_started
+      chaos-web:
+        condition: service_started
+
+  # ============================================================================
+  # Grafana Visualization & Observability Dashboard
+  # ============================================================================
+  grafana:
+    image: grafana/grafana:11.5.2
+    container_name: chaos-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3003}:3000"
+    environment:
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro,z
+      - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro,z
+      - ./docker/grafana/dashboards:/etc/grafana/dashboards:ro,z
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 # ==============================================================================
-# Persistent Named Volumes
+# Persistent Named Volumes & Networks
 # ==============================================================================
 volumes:
   mongo_data:
     name: chaos_mongo_data
+  prometheus_data:
+    name: chaos_prometheus_data
+  grafana_data:
+    name: chaos_grafana_data
+
+networks:
+  default:
+    name: chaos-net
+    external: true

@@ -1,4 +1,9 @@
 import type http from 'node:http';
+import {
+  getPrometheusMetrics,
+  httpRequestsTotal,
+  httpRequestDurationSeconds,
+} from '@chaos/shared';
 import type { CheckoutConfig } from './config.js';
 import { handleHealthCheck } from './handlers/health-handler.js';
 import {
@@ -16,6 +21,36 @@ export function createApp(config: CheckoutConfig, startTime: number) {
     const url = new URL(req.url ?? '/', `http://${host}`);
     const pathname = url.pathname;
     const method = req.method ?? 'GET';
+
+    const reqStartTime = process.hrtime.bigint();
+    res.on('finish', () => {
+      const durationSeconds = Number(process.hrtime.bigint() - reqStartTime) / 1e9;
+      const statusStr = String(res.statusCode);
+      httpRequestsTotal.inc({
+        service: 'acme-checkout',
+        method,
+        route: pathname,
+        status_code: statusStr,
+      });
+      httpRequestDurationSeconds.observe(
+        {
+          service: 'acme-checkout',
+          method,
+          route: pathname,
+          status_code: statusStr,
+        },
+        durationSeconds
+      );
+    });
+
+    // Prometheus metrics endpoint for Grafana
+    if ((method === 'GET' || method === 'HEAD') && pathname === '/metrics') {
+      const { contentType, metrics } = await getPrometheusMetrics();
+      res.setHeader('Content-Type', contentType);
+      res.writeHead(200);
+      res.end(metrics);
+      return;
+    }
 
     // Chaos failure interceptor & control endpoint
     const intercepted = await chaosInterceptor.handleRequest(req, res);

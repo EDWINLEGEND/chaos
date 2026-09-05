@@ -1,4 +1,10 @@
 import type http from 'node:http';
+import {
+  webhookEventsReceivedTotal,
+  ordersCreatedTotal,
+  silentOrderLossTotal,
+  estimatedRevenueLossCents,
+} from '@chaos/shared';
 import { parseJsonBody, sendJson, sendError, HttpError } from '../utils/http.js';
 import {
   processPaymentConfirmedWebhook,
@@ -77,8 +83,18 @@ export async function handlePaymentConfirmedWebhook(
     const result = await processPaymentConfirmedWebhook(validatedInput, config.webhookTimeoutMs);
 
     if ('received' in result && result.received === true) {
+      webhookEventsReceivedTotal.inc({ status: 'timeout_dropped' });
+      silentOrderLossTotal.inc();
+      estimatedRevenueLossCents.inc(validatedInput.amount);
       sendJson(res, 200, { received: true });
       return;
+    }
+
+    if ('created' in result && result.created === true) {
+      webhookEventsReceivedTotal.inc({ status: 'created' });
+      ordersCreatedTotal.inc();
+    } else if ('duplicate' in result && result.duplicate === true) {
+      webhookEventsReceivedTotal.inc({ status: 'duplicate' });
     }
 
     sendJson(res, 200, {

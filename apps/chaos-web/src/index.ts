@@ -2,7 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createHealthReport, type FailureType, type ExperimentTarget } from '@chaos/shared';
+import { createHealthReport, getPrometheusMetrics, type FailureType, type ExperimentTarget } from '@chaos/shared';
 import { loadConfig } from './config.js';
 import { sendJson, sendError, parseJsonBody } from './utils/http.js';
 import { experimentRegistry } from './controller/experiment-registry.js';
@@ -44,6 +44,15 @@ export function createChaosServer() {
       if ((method === 'GET' || method === 'HEAD') && (pathname === '/health' || pathname === '/api/health')) {
         const health = createHealthReport('chaos-web', startTime);
         sendJson(res, 200, health);
+        return;
+      }
+
+      // Prometheus metrics endpoint: GET /metrics
+      if (method === 'GET' && pathname === '/metrics') {
+        const { contentType, metrics } = await getPrometheusMetrics();
+        res.setHeader('Content-Type', contentType);
+        res.writeHead(200);
+        res.end(metrics);
         return;
       }
 

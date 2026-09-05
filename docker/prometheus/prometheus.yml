@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: 'acme-checkout'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['checkout:3001']
+        labels:
+          service: 'checkout'
+          env: 'chaos-demo'
+
+  - job_name: 'fake-payment-provider'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['payment-provider:3002']
+        labels:
+          service: 'payment-provider'
+          env: 'chaos-demo'
+
+  - job_name: 'chaos-web'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['chaos-web:3000']
+        labels:
+          service: 'chaos-web'
+          env: 'chaos-demo'

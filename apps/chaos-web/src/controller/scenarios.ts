@@ -1,11 +1,6 @@
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
 import type { ChaosScenario } from '@chaos/shared';
 import { experimentRegistry } from './experiment-registry.js';
 import { logActivity } from './activity-logger.js';
-import { getRepoRoot } from '../utils/paths.js';
-
-const execAsync = promisify(exec);
 
 interface ActiveScenarioState {
   scenarioId: string;
@@ -86,6 +81,90 @@ const PREDEFINED_SCENARIOS: ChaosScenario[] = [
   },
 ];
 
+async function executeWebhookLoad(options: {
+  totalRequests: number;
+  concurrency: number;
+  label: string;
+}): Promise<void> {
+  const checkoutUrl =
+    process.env['CHECKOUT_URL'] || process.env['CHECKOUT_SERVICE_URL'] || 'http://127.0.0.1:3001';
+  const paymentProviderUrl = process.env['PAYMENT_PROVIDER_URL'] || 'http://127.0.0.1:3002';
+  const { totalRequests, concurrency, label } = options;
+
+  logActivity('warn', `[${label}] Concurrent webhook load generator starting (${concurrency} workers, ${totalRequests} requests)...`);
+
+  // 1. Generate payments on Payment Provider
+  const paymentEvents: Array<{ id: string; paymentId: string; userId: string; amount: number }> = [];
+  const creationBatchSize = 50;
+  for (let i = 0; i < totalRequests; i += creationBatchSize) {
+    const batchCount = Math.min(creationBatchSize, totalRequests - i);
+    const batchPromises = Array.from({ length: batchCount }, async (_, idx) => {
+      const globalIdx = i + idx;
+      const userId = `user_traffic_${String(globalIdx + 1).padStart(5, '0')}`;
+      const amount = 1000 + (globalIdx % 50) * 100;
+
+      const res = await fetch(`${paymentProviderUrl}/v1/test/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to create payment: ${res.status}`);
+      }
+      return (await res.json()) as { id: string; paymentId: string; userId: string; amount: number };
+    });
+
+    const createdBatch = await Promise.all(batchPromises);
+    paymentEvents.push(...createdBatch);
+  }
+
+  logActivity('info', `[${label}] Registered ${paymentEvents.length} payment events. Concurrently driving webhooks...`);
+
+  // 2. Concurrently dispatch webhooks to Checkout
+  let currentIndex = 0;
+  let silentTimeouts = 0;
+  let orderCreations = 0;
+
+  async function worker(): Promise<void> {
+    while (currentIndex < paymentEvents.length) {
+      const index = currentIndex++;
+      const event = paymentEvents[index];
+      if (!event) break;
+
+      try {
+        const res = await fetch(`${checkoutUrl}/webhooks/payment-confirmed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: event.id,
+            type: 'payment-confirmed',
+            paymentId: event.paymentId,
+            userId: event.userId,
+            amount: event.amount,
+          }),
+        });
+
+        if (res.status === 200) {
+          const json = (await res.json()) as Record<string, unknown>;
+          if (json['received'] === true) {
+            silentTimeouts++;
+          } else if (json['data'] && typeof json['data'] === 'object') {
+            const data = json['data'] as Record<string, unknown>;
+            if (data['created'] === true) {
+              orderCreations++;
+            }
+          }
+        }
+      } catch {}
+    }
+  }
+
+  const workers = Array.from({ length: concurrency }, () => worker());
+  await Promise.all(workers);
+
+  logActivity('success', `[${label}] Load run complete. Created: ${orderCreations}, Silently Dropped: ${silentTimeouts}.`);
+}
+
 export function listScenarios(): ChaosScenario[] {
   return PREDEFINED_SCENARIOS.map((sc) => {
     const active = activeScenarios.get(sc.id);
@@ -131,9 +210,11 @@ export async function startScenario(id: string): Promise<{ scenario: ChaosScenar
     // Run real incident break machinery asynchronously in background
     (async () => {
       try {
-        logActivity('warn', '[Primary Incident] Concurrent webhook load generator starting (50 workers, 1200 requests)...');
-        await execAsync('pnpm break', { cwd: getRepoRoot() });
-        logActivity('success', '[Primary Incident] Concurrent webhook run completed. Silent order loss reproduced.');
+        await executeWebhookLoad({
+          totalRequests: 1200,
+          concurrency: 50,
+          label: 'Primary Incident',
+        });
       } catch (err) {
         logActivity('error', `[Primary Incident] Error during run: ${err instanceof Error ? err.message : String(err)}`);
       } finally {
@@ -250,9 +331,11 @@ export async function startScenario(id: string): Promise<{ scenario: ChaosScenar
     // Run controlled traffic burst asynchronously
     (async () => {
       try {
-        logActivity('info', '[Traffic Surge] Dispatching controlled traffic burst (25 workers, 300 requests)...');
-        await execAsync('BREAK_TOTAL_REQUESTS=300 BREAK_CONCURRENCY=25 pnpm break', { cwd: getRepoRoot() });
-        logActivity('success', '[Traffic Surge] Traffic burst completed.');
+        await executeWebhookLoad({
+          totalRequests: 300,
+          concurrency: 25,
+          label: 'Traffic Surge',
+        });
       } catch (err) {
         logActivity('error', `[Traffic Surge] Error: ${err instanceof Error ? err.message : String(err)}`);
       } finally {

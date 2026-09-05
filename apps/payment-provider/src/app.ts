@@ -1,5 +1,10 @@
 import type http from 'node:http';
-import { createHealthReport } from '@chaos/shared';
+import {
+  createHealthReport,
+  getPrometheusMetrics,
+  httpRequestsTotal,
+  httpRequestDurationSeconds,
+} from '@chaos/shared';
 import type { PaymentProviderConfig } from './config.js';
 import type { PaymentStore } from './store.js';
 import { parseJsonBody, sendJson, sendError, HttpError } from './utils/http.js';
@@ -12,12 +17,42 @@ export function createApp(
 ): (req: http.IncomingMessage, res: http.ServerResponse) => Promise<void> {
   return async (req: http.IncomingMessage, res: http.ServerResponse): Promise<void> => {
     try {
+      const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
+      const method = req.method ?? 'GET';
+
+      const reqStartTime = process.hrtime.bigint();
+      res.on('finish', () => {
+        const durationSeconds = Number(process.hrtime.bigint() - reqStartTime) / 1e9;
+        const statusStr = String(res.statusCode);
+        httpRequestsTotal.inc({
+          service: 'fake-payment-provider',
+          method,
+          route: url.pathname,
+          status_code: statusStr,
+        });
+        httpRequestDurationSeconds.observe(
+          {
+            service: 'fake-payment-provider',
+            method,
+            route: url.pathname,
+            status_code: statusStr,
+          },
+          durationSeconds
+        );
+      });
+
+      // Prometheus metrics endpoint for Grafana
+      if ((method === 'GET' || method === 'HEAD') && url.pathname === '/metrics') {
+        const { contentType, metrics } = await getPrometheusMetrics();
+        res.setHeader('Content-Type', contentType);
+        res.writeHead(200);
+        res.end(metrics);
+        return;
+      }
+
       // Chaos failure interceptor & control endpoint
       const intercepted = await paymentChaosInterceptor.handleRequest(req, res);
       if (intercepted) return;
-
-      const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
-      const method = req.method ?? 'GET';
 
       // 1. Health check endpoint
       if ((method === 'GET' || method === 'HEAD') && url.pathname === '/health') {
