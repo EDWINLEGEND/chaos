@@ -1,0 +1,73 @@
+services:
+  # ============================================================================
+  # Primary Database: MongoDB 7
+  # ============================================================================
+  mongodb:
+    image: mongo:7.0
+    container_name: chaos-mongodb
+    restart: unless-stopped
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-acme}
+    volumes:
+      - mongo_data:/data/db
+      - ./docker/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ============================================================================
+  # Future Service Definitions (Ready for containerization when apps mature)
+  # ============================================================================
+
+  # checkout:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/checkout/Dockerfile
+  #   container_name: chaos-checkout
+  #   ports:
+  #     - "${CHECKOUT_PORT:-3001}:3001"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - CHECKOUT_PORT=3001
+  #     - MONGODB_URI=mongodb://mongodb:27017/acme
+  #     - PAYMENT_PROVIDER_URL=http://payment-provider:3002
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
+
+  # payment-provider:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/payment-provider/Dockerfile
+  #   container_name: chaos-payment-provider
+  #   ports:
+  #     - "${PAYMENT_PROVIDER_PORT:-3002}:3002"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - PAYMENT_PROVIDER_PORT=3002
+  #     - CHECKOUT_WEBHOOK_URL=http://checkout:3001/webhooks/payment
+
+  # chaos-web:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/chaos-web/Dockerfile
+  #   container_name: chaos-web
+  #   ports:
+  #     - "${CHAOS_WEB_PORT:-3000}:3000"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - CHAOS_WEB_PORT=3000
+  #     - CHECKOUT_SERVICE_URL=http://checkout:3001
+  #     - PAYMENT_PROVIDER_URL=http://payment-provider:3002
+
+# ==============================================================================
+# Persistent Named Volumes
+# ==============================================================================
+volumes:
+  mongo_data:
+    name: chaos_mongo_data
