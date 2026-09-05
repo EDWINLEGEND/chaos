@@ -1,21 +1,38 @@
+import type { ObjectId } from 'mongodb';
+
 /**
  * Status lifecycle of an Order in the Acme Checkout system.
  */
-export type OrderStatus = 'pending' | 'confirmed' | 'failed' | 'cancelled';
+export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'failed';
 
 /**
- * Core Order representation stored in MongoDB `orders` collection.
+ * Order document shape stored directly in MongoDB `orders` collection.
+ * 
+ * IMPORTANT: The future duplicate-order lookup will query:
+ *   db.orders.findOne({ userId, status: "pending" })
+ * There is NO supporting compound index on { userId: 1, status: 1 }.
  */
-export interface Order {
-  id: string;
-  orderNumber: string;
-  customerEmail: string;
-  amount: number;
-  currency: string;
+export interface OrderDocument {
+  _id: ObjectId;
+  userId: string;
   status: OrderStatus;
-  paymentId?: string;
+  paymentId: string;
+  amount: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/**
+ * Webhook event document shape stored in MongoDB `webhook_events` collection.
+ * Used by OpsRoom reconciliation probes to compare received payment events against created orders.
+ */
+export interface WebhookEventDocument {
+  _id: ObjectId;
+  eventId: string;
+  paymentId: string;
+  userId: string;
+  type: 'payment-confirmed';
+  createdAt: Date;
 }
 
 /**
@@ -42,19 +59,6 @@ export interface PaymentWebhookPayload {
 }
 
 /**
- * Recorded webhook event stored in MongoDB `webhook_events` collection.
- */
-export interface WebhookEventRecord {
-  id: string;
-  eventId: string;
-  eventType: string;
-  payload: PaymentWebhookPayload;
-  processed: boolean;
-  receivedAt: Date;
-  error?: string;
-}
-
-/**
  * Standard API response wrapper.
  */
 export interface ApiResponse<T = unknown> {
@@ -67,6 +71,16 @@ export interface ApiResponse<T = unknown> {
 }
 
 /**
+ * Database connectivity status.
+ */
+export interface DatabaseHealth {
+  status: 'ok' | 'down';
+  database: string;
+  latencyMs?: number;
+  error?: string;
+}
+
+/**
  * Health check response structure.
  */
 export interface ServiceHealth {
@@ -74,4 +88,6 @@ export interface ServiceHealth {
   service: string;
   uptimeSeconds: number;
   timestamp: string;
+  database?: 'ok' | 'down';
+  databaseDetails?: DatabaseHealth;
 }

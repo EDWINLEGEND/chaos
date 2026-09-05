@@ -16,5 +16,8 @@
     "build": "tsc --build",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "mongodb": "^6.21.0"
   }
 }

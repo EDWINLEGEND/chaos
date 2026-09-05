@@ -11,7 +11,11 @@
     "build": "pnpm -r run build",
     "typecheck": "tsc --build",
     "test": "vitest run",
+    "db:check": "tsx scripts/check-db.ts",
     "dev": "pnpm --parallel -r --filter \"./apps/*\" run dev"
+  },
+  "dependencies": {
+    "@chaos/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

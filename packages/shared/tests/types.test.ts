@@ -1,7 +1,17 @@
-import { describe, it, expect } from 'vitest';
-import { isPaymentSuccessWebhook, createHealthReport } from '../src/index.js';
+import { describe, it, expect, afterEach } from 'vitest';
+import {
+  isPaymentSuccessWebhook,
+  createHealthReport,
+  checkDatabaseConnectivity,
+  getDb,
+  closeDatabase,
+} from '../src/index.js';
 
 describe('@chaos/shared foundation', () => {
+  afterEach(async () => {
+    await closeDatabase();
+  });
+
   it('correctly validates valid payment success webhook payload', () => {
     const validPayload = {
       eventId: 'evt_123',
@@ -37,5 +47,15 @@ describe('@chaos/shared foundation', () => {
     expect(report.service).toBe('checkout');
     expect(report.uptimeSeconds).toBeGreaterThanOrEqual(5);
     expect(new Date(report.timestamp).getTime()).not.toBeNaN();
+  });
+
+  it('reports database down when client is not initialized', async () => {
+    const health = await checkDatabaseConnectivity();
+    expect(health.status).toBe('down');
+    expect(health.error).toBe('Client not connected');
+  });
+
+  it('throws an error if getDb() is invoked prior to initDatabase()', () => {
+    expect(() => getDb()).toThrow(/Database has not been initialized/);
   });
 });

@@ -12,7 +12,7 @@ services:
       MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-acme}
     volumes:
       - mongo_data:/data/db
-      - ./docker/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./docker/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro,z
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 10s
