@@ -223,51 +223,11 @@
         transform: translateY(-1px);
       }
 
-      /* Emergency Stop Fault Button - Super High Contrast & Visibility */
+      /* Emergency Stop Fault Button - Clean High-Contrast Pill */
       .btn-stop-fault {
         background: #ffffff !important;
         color: #be123c !important;
-        border: 2px solid #ffffff !important;
-        font-family: var(--font-sans);
-        font-weight: 800 !important;
-        font-size: 0.82rem !important;
-        letter-spacing: 0.02em !important;
-        padding: 0.52rem 1.35rem !important;
-        border-radius: 9999px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 0.55rem !important;
-        cursor: pointer !important;
-        box-shadow: 0 0 22px rgba(255, 255, 255, 0.75), 0 4px 16px rgba(0, 0, 0, 0.8) !important;
-        animation: stop-btn-pulse 1.8s infinite ease-in-out;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-      }
-
-      .btn-stop-fault:hover:not(:disabled) {
-        background: #ffe4e6 !important;
-        border-color: #ffffff !important;
-        transform: translateY(-1px) scale(1.04) !important;
-        box-shadow: 0 0 32px rgba(255, 255, 255, 0.95), 0 0 42px rgba(244, 63, 94, 0.7), 0 6px 22px rgba(0, 0, 0, 0.9) !important;
-      }
-
-      .btn-stop-fault:active:not(:disabled) {
-        transform: translateY(0) scale(0.98) !important;
-      }
-
-      @keyframes stop-btn-pulse {
-        0%, 100% {
-          box-shadow: 0 0 16px rgba(255, 255, 255, 0.65), 0 4px 14px rgba(0, 0, 0, 0.8);
-        }
-        50% {
-          box-shadow: 0 0 28px rgba(255, 255, 255, 0.95), 0 0 38px rgba(244, 63, 94, 0.65), 0 6px 18px rgba(0, 0, 0, 0.9);
-        }
-      }
-
-      /* Energetic Run Scenario Button - Apple Vibrant Emerald Horizon Gradient */
-      .btn-run-scenario {
-        background: linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%) !important;
-        color: #ffffff !important;
-        border: 1.5px solid rgba(52, 211, 153, 0.7) !important;
+        border: 1px solid rgba(255, 255, 255, 0.9) !important;
         font-family: var(--font-sans);
         font-weight: 700 !important;
         font-size: 0.82rem !important;
@@ -278,29 +238,48 @@
         align-items: center !important;
         gap: 0.55rem !important;
         cursor: pointer !important;
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 14px rgba(0, 0, 0, 0.7) !important;
-        animation: run-btn-pulse 2.4s infinite ease-in-out;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 #ffffff !important;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      }
+
+      .btn-stop-fault:hover:not(:disabled) {
+        background: #fff1f2 !important;
+        transform: translateY(-1px) scale(1.02) !important;
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2), 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+      }
+
+      .btn-stop-fault:active:not(:disabled) {
+        transform: translateY(0) scale(0.98) !important;
+      }
+
+      /* Run Scenario Button - Clean White Apple Native Pill */
+      .btn-run-scenario {
+        background: #ffffff !important;
+        color: #09090b !important;
+        border: 1px solid rgba(255, 255, 255, 0.9) !important;
+        font-family: var(--font-sans);
+        font-weight: 700 !important;
+        font-size: 0.82rem !important;
+        letter-spacing: 0.01em !important;
+        padding: 0.52rem 1.35rem !important;
+        border-radius: 9999px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        cursor: pointer !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 #ffffff !important;
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
       }
 
       .btn-run-scenario:hover:not(:disabled) {
-        background: linear-gradient(135deg, #34d399 0%, #10b981 60%, #059669 100%) !important;
-        border-color: #6ee7b7 !important;
-        transform: translateY(-1px) scale(1.04) !important;
-        box-shadow: 0 0 32px rgba(16, 185, 129, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 6px 20px rgba(0, 0, 0, 0.9) !important;
+        background: #f4f4f5 !important;
+        border-color: #ffffff !important;
+        transform: translateY(-1px) scale(1.02) !important;
+        box-shadow: 0 4px 14px rgba(255, 255, 255, 0.2), 0 2px 6px rgba(0, 0, 0, 0.6) !important;
       }
 
       .btn-run-scenario:active:not(:disabled) {
         transform: translateY(0) scale(0.98) !important;
-      }
-
-      @keyframes run-btn-pulse {
-        0%, 100% {
-          box-shadow: 0 0 16px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 14px rgba(0, 0, 0, 0.7);
-        }
-        50% {
-          box-shadow: 0 0 28px rgba(16, 185, 129, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 18px rgba(0, 0, 0, 0.85);
-        }
       }
 
       .btn-pill:disabled {
@@ -339,23 +318,11 @@
       .widget-purple  { background: var(--grad-purple); }
       .widget-neutral { background: var(--grad-neutral); }
 
-      /* Dynamic Breaking / Processing Scenario State (High Contrast & Visibility) */
+      /* Breaking Scenario State - Refined Subtle Normal Glow */
       .widget.breaking {
-        background: radial-gradient(135% 85% at 50% 115%, #881337 0%, #4c0519 45%, #1f020a 80%, #0a0003 100%) !important;
-        border: 1.5px solid #ff4d6d !important;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 36px rgba(244, 63, 94, 0.55), 0 8px 32px rgba(0, 0, 0, 0.8) !important;
-        animation: pulse-breaking 2s infinite ease-in-out;
-      }
-
-      @keyframes pulse-breaking {
-        0%, 100% {
-          border-color: #ff4d6d;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 30px rgba(244, 63, 94, 0.45);
-        }
-        50% {
-          border-color: #ff758f;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 50px rgba(244, 63, 94, 0.75);
-        }
+        background: radial-gradient(135% 85% at 50% 115%, #4c0519 0%, #1f020a 55%, #050002 100%) !important;
+        border: 1px solid rgba(244, 63, 94, 0.4) !important;
+        box-shadow: var(--inner-highlight), 0 12px 32px rgba(0, 0, 0, 0.6), 0 2px 10px rgba(244, 63, 94, 0.12) !important;
       }
 
       .widget.breaking .widget-title-group span {
@@ -364,22 +331,16 @@
       }
 
       .widget.breaking .scenario-desc {
-        color: rgba(255, 255, 255, 0.92) !important;
+        color: rgba(255, 255, 255, 0.88) !important;
       }
 
       .widget.breaking .widget-badge.alert {
-        background: #ff1e4b !important;
-        color: #ffffff !important;
-        font-weight: 800 !important;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        box-shadow: 0 0 14px rgba(255, 30, 75, 0.85) !important;
-        letter-spacing: 0.04em !important;
-        animation: badge-beacon 1.2s infinite ease-in-out;
-      }
-
-      @keyframes badge-beacon {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
+        background: rgba(244, 63, 94, 0.22) !important;
+        color: #fb7185 !important;
+        font-weight: 700 !important;
+        border: 1px solid rgba(244, 63, 94, 0.35) !important;
+        box-shadow: none !important;
+        letter-spacing: 0.02em !important;
       }
 
       /* Scenario Description Typography & Spacing */
@@ -610,23 +571,23 @@
       /* Breaking Live Shimmer Line */
       .breaking-shimmer-bar {
         width: 100%;
-        height: 8px;
-        background: rgba(0, 0, 0, 0.55);
-        border: 1px solid rgba(255, 77, 109, 0.4);
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 9999px;
         overflow: hidden;
         position: relative;
         margin-top: auto;
         margin-bottom: 0.95rem;
-        box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.8), 0 0 12px rgba(244, 63, 94, 0.3);
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
       }
 
       .breaking-shimmer-fill {
         position: absolute;
         inset: 0;
-        background: linear-gradient(90deg, transparent, #ff1e4b, #ffffff, #ff1e4b, transparent);
+        background: linear-gradient(90deg, transparent, #f43f5e, rgba(255, 255, 255, 0.7), #f43f5e, transparent);
         background-size: 200% 100%;
-        animation: shimmer 1.2s infinite linear;
+        animation: shimmer 1.5s infinite linear;
       }
 
       @keyframes shimmer {
@@ -689,9 +650,8 @@
       }
 
       .hero-widget.breaking {
-        border-color: #ff4d6d !important;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 45px rgba(244, 63, 94, 0.6) !important;
-        animation: pulse-breaking 2s infinite ease-in-out;
+        border-color: rgba(244, 63, 94, 0.4) !important;
+        box-shadow: var(--inner-highlight), 0 12px 32px rgba(0, 0, 0, 0.6), 0 2px 10px rgba(244, 63, 94, 0.12) !important;
       }
 
       .hero-top {
@@ -1077,7 +1037,7 @@
                 </svg>
                 <span>Orders</span>
               </div>
-              <span class="widget-badge streak">🔥 500k</span>
+              <span class="widget-badge streak">500k</span>
             </div>
             <div>
               <div class="widget-label">acme.orders</div>
@@ -1106,7 +1066,7 @@
                 </svg>
                 <span>Webhooks</span>
               </div>
-              <span class="widget-badge">➔ 1 200</span>
+              <span class="widget-badge">1,200</span>
             </div>
             <div>
               <div class="widget-label">webhook_events</div>
@@ -1138,7 +1098,7 @@
                 </svg>
                 <span>Query Plan</span>
               </div>
-              <span class="widget-badge alert" id="badge-index-pill">⚠️ Vulnerable</span>
+              <span class="widget-badge alert" id="badge-index-pill">Vulnerable</span>
             </div>
             <div>
               <div class="widget-label">{ userId, status }</div>
@@ -1206,12 +1166,12 @@
           </div>
 
           <!-- Dynamic Live Breaking Banner (Shows when executing) -->
-          <div id="hero-breaking-banner" style="display: none; background: rgba(244, 63, 94, 0.35); border: 1.5px solid #ff4d6d; padding: 0.75rem 1.25rem; border-radius: 14px; font-size: 0.82rem; font-family: var(--font-mono); color: #ffffff; align-items: center; justify-content: space-between; box-shadow: 0 0 24px rgba(244, 63, 94, 0.45);">
+          <div id="hero-breaking-banner" style="display: none; background: rgba(244, 63, 94, 0.18); border: 1px solid rgba(244, 63, 94, 0.35); padding: 0.75rem 1.25rem; border-radius: 14px; font-size: 0.82rem; font-family: var(--font-mono); color: #ffffff; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);">
             <div style="display: flex; align-items: center; gap: 0.65rem;">
               <span class="status-pulse-dot status-ruby" style="width: 10px; height: 10px; animation: pulse-alert 0.8s infinite;"></span>
               <span id="hero-breaking-text" style="font-weight: 600; letter-spacing: 0.02em;">Simulating 1,200 Concurrent Webhooks with COLLSCAN Saturation...</span>
             </div>
-            <span id="hero-breaking-timer" style="background: #ffffff; color: #e11d48; font-weight: 800; font-size: 0.82rem; padding: 0.22rem 0.75rem; border-radius: 9999px; box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);">--s</span>
+            <span id="hero-breaking-timer" style="background: #ffffff; color: #e11d48; font-weight: 800; font-size: 0.82rem; padding: 0.22rem 0.75rem; border-radius: 9999px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">--s</span>
           </div>
 
           <!-- 5-Stage Architecture Pipeline Representation -->
@@ -1439,7 +1399,7 @@
                 </svg>
                 <span>Gateway Captured</span>
               </div>
-              <span class="widget-badge streak" id="recon-badge-gateway">🔥 1,200</span>
+              <span class="widget-badge streak" id="recon-badge-gateway">1,200</span>
             </div>
             <div>
               <div class="widget-label">fake-payment-provider</div>
@@ -1460,7 +1420,7 @@
                 </svg>
                 <span>Webhooks Received</span>
               </div>
-              <span class="widget-badge" id="recon-badge-webhooks">➔ 1,200</span>
+              <span class="widget-badge" id="recon-badge-webhooks">1,200</span>
             </div>
             <div>
               <div class="widget-label">webhook_events</div>
@@ -1859,11 +1819,11 @@
           if (indexLabel && indexPill) {
             if (data.supportingIndexPresent) {
               indexLabel.textContent = 'IXSCAN';
-              indexPill.textContent = '✓ Optimized';
+              indexPill.textContent = 'Optimized';
               indexPill.className = 'widget-badge success';
             } else {
               indexLabel.textContent = 'COLLSCAN';
-              indexPill.textContent = '⚠️ Vulnerable';
+              indexPill.textContent = 'Vulnerable';
               indexPill.className = 'widget-badge alert';
             }
           }
@@ -2055,7 +2015,7 @@
                     </svg>
                     <span>${sName}</span>
                   </div>
-                  <span class="widget-badge ${isRunning ? 'alert' : ''}">${isRunning ? '🔥 BREAKING' : sTarget}</span>
+                  <span class="widget-badge ${isRunning ? 'alert' : ''}">${isRunning ? 'BREAKING' : sTarget}</span>
                 </div>
                 <div class="scenario-desc">
                   ${sDesc}
