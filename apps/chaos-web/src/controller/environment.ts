@@ -130,6 +130,11 @@ export async function getReconciliationReport(): Promise<{
   ordersCreatedFromTraffic: number;
   silentLossCount: number;
   lossRatePercentage: number;
+  totalCapturedRevenueCents: number;
+  totalLostRevenueCents: number;
+  totalLostRevenueFormatted: string;
+  ledgerDroppedCents: number;
+  ledgerDroppedFormatted: string;
   recentLedger: Array<{
     eventId: string;
     paymentId: string;
@@ -199,6 +204,16 @@ export async function getReconciliationReport(): Promise<{
       };
     });
 
+    // Calculate total financial revenue lost
+    const totalCapturedRevenueCents = paymentEvents.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const avgOrderCents = paymentEvents.length > 0 ? totalCapturedRevenueCents / paymentEvents.length : 0;
+    const totalLostRevenueCents = Math.round(silentLossCount * avgOrderCents);
+
+    // Sum of amount field for all SILENTLY_DROPPED ledger rows
+    const ledgerDroppedCents = recentLedger
+      .filter((r) => r.status === 'SILENTLY_DROPPED')
+      .reduce((sum, r) => sum + (r.amount || 0), 0);
+
     return {
       paymentEventsCount: paymentEvents.length,
       webhookEventsCount,
@@ -206,6 +221,11 @@ export async function getReconciliationReport(): Promise<{
       ordersCreatedFromTraffic,
       silentLossCount,
       lossRatePercentage,
+      totalCapturedRevenueCents,
+      totalLostRevenueCents,
+      totalLostRevenueFormatted: `$${(totalLostRevenueCents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      ledgerDroppedCents,
+      ledgerDroppedFormatted: `$${(ledgerDroppedCents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       recentLedger,
     };
   } finally {

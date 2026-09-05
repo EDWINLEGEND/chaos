@@ -635,6 +635,12 @@
       }
 
       /* Grids with Comfortable Layout Spacing */
+      .widget-grid-5 {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1.35rem;
+      }
+
       .widget-grid-4 {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -653,12 +659,18 @@
         gap: 1.35rem;
       }
 
+      @media (max-width: 1400px) {
+        .widget-grid-5 { grid-template-columns: repeat(3, 1fr); }
+      }
+
       @media (max-width: 1100px) {
+        .widget-grid-5 { grid-template-columns: repeat(2, 1fr); }
         .widget-grid-4 { grid-template-columns: repeat(2, 1fr); }
         .widget-grid-3 { grid-template-columns: 1fr; }
       }
 
       @media (max-width: 650px) {
+        .widget-grid-5 { grid-template-columns: 1fr; }
         .widget-grid-4 { grid-template-columns: 1fr; }
         .widget-grid-2 { grid-template-columns: 1fr; }
       }
@@ -1415,8 +1427,8 @@
            PAGE 5: RECONCILIATION & LEDGER (Core Business Audit)
            ==================================================================== -->
       <main class="tab-view" id="view-reconciliation">
-        <!-- 4 Reconciliation Widgets -->
-        <section class="widget-grid-4">
+        <!-- 5 Reconciliation Widgets including Financial Revenue Loss Ticker -->
+        <section class="widget-grid-5">
           <!-- Recon 1: Gateway Captured (Emerald) -->
           <div class="widget widget-emerald">
             <div class="widget-top">
@@ -1484,11 +1496,11 @@
             </div>
           </div>
 
-          <!-- Recon 4: Silently Lost Orders (Ruby) -->
-          <div class="widget widget-ruby">
+          <!-- Recon 4: Silently Lost Orders (Amber Warning) -->
+          <div class="widget widget-amber">
             <div class="widget-top">
               <div class="widget-title-group">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5">
                   <circle cx="12" cy="12" r="10"/>
                   <line x1="12" y1="8" x2="12" y2="12"/>
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -1499,10 +1511,39 @@
             </div>
             <div>
               <div class="widget-label">Undelivered Orders</div>
-              <div class="widget-metric" style="color: #fb7185;" id="recon-lost-count">0</div>
+              <div class="widget-metric" style="color: #fbbf24;" id="recon-lost-count">0</div>
             </div>
             <div class="track-pill-ticks">
-              <div class="progress-pill pill-ruby" id="recon-lost-bar" style="width: 10%;"></div>
+              <div class="progress-pill pill-amber" id="recon-lost-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Recon 5: Financial Revenue Loss Ticker (Apple Ruby KPI Widget) -->
+          <div class="widget widget-ruby" style="position: relative; overflow: hidden;">
+            <div class="widget-top">
+              <div class="widget-title-group">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                <span>Financial Revenue Loss</span>
+              </div>
+              <span class="widget-badge alert" id="recon-revenue-badge" style="background: rgba(244,63,94,0.22); color: #fda4af; border: 1px solid rgba(244,63,94,0.35);">
+                $0.00 Lost
+              </span>
+            </div>
+            <div>
+              <div class="widget-label">Lost Revenue (SILENTLY_DROPPED)</div>
+              <div class="widget-metric" style="color: #fb7185; font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em;" id="recon-revenue-lost">
+                $0.00
+              </div>
+            </div>
+            <div class="track-pill-ticks">
+              <div class="progress-pill pill-ruby" id="recon-revenue-bar" style="width: 0%;"></div>
+              <div class="progress-ticks">
+                <span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span>
+                <span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span>
+              </div>
             </div>
           </div>
         </section>
@@ -1520,6 +1561,7 @@
                 <line x1="3" y1="18" x2="3.01" y2="18"/>
               </svg>
               <span>Transaction Discrepancy Ledger (Real Data from Services)</span>
+              <span class="widget-badge alert" id="ledger-sample-loss" style="font-size: 0.72rem; margin-left: 0.5rem; display: none;">Sample Lost: $0.00</span>
             </span>
             <button class="btn-pill btn-pill-primary" style="padding: 0.35rem 0.85rem; font-size: 0.75rem;" onclick="fetchReconciliationData()">
               Refresh Ledger Audit
@@ -1893,6 +1935,10 @@
           const ordersBar = document.getElementById('recon-orders-bar');
           const lostBar = document.getElementById('recon-lost-bar');
           const segTrack = document.getElementById('recon-seg-track');
+          const revenueLost = document.getElementById('recon-revenue-lost');
+          const revenueBadge = document.getElementById('recon-revenue-badge');
+          const revenueBar = document.getElementById('recon-revenue-bar');
+          const ledgerSampleLoss = document.getElementById('ledger-sample-loss');
 
           if (gatewayCount) gatewayCount.textContent = Number(data.paymentEventsCount).toLocaleString();
           if (webhooksCount) webhooksCount.textContent = Number(data.webhookEventsCount).toLocaleString();
@@ -1907,6 +1953,32 @@
           }
           if (lostBar && data.paymentEventsCount > 0) {
             lostBar.style.width = `${Math.min(Math.round((data.silentLossCount / data.paymentEventsCount) * 100), 100)}%`;
+          }
+          if (revenueLost) {
+            revenueLost.textContent = data.totalLostRevenueFormatted || '$0.00';
+          }
+          if (revenueBadge) {
+            if (data.totalLostRevenueCents > 0) {
+              revenueBadge.textContent = `-${data.totalLostRevenueFormatted}`;
+              revenueBadge.className = 'widget-badge alert';
+            } else {
+              revenueBadge.textContent = '$0.00 Lost';
+              revenueBadge.className = 'widget-badge';
+            }
+          }
+          if (revenueBar && data.totalCapturedRevenueCents > 0) {
+            const lossPercent = Math.min(Math.round((data.totalLostRevenueCents / data.totalCapturedRevenueCents) * 100), 100);
+            revenueBar.style.width = `${lossPercent}%`;
+          } else if (revenueBar) {
+            revenueBar.style.width = '0%';
+          }
+          if (ledgerSampleLoss) {
+            if (data.ledgerDroppedCents > 0) {
+              ledgerSampleLoss.style.display = 'inline-flex';
+              ledgerSampleLoss.textContent = `Sample Lost: ${data.ledgerDroppedFormatted}`;
+            } else {
+              ledgerSampleLoss.style.display = 'none';
+            }
           }
           if (segTrack && data.paymentEventsCount > 0) {
             const blocks = segTrack.querySelectorAll('.seg-block');
@@ -1932,11 +2004,11 @@
                   : '<span style="background: rgba(16,185,129,0.15); color: #34d399; padding: 0.2rem 0.5rem; border-radius: 9999px; font-weight: 600; font-size: 0.7rem; border: 1px solid rgba(16,185,129,0.3);">FULFILLED</span>';
 
                 return `
-                  <tr>
+                  <tr style="${isDropped ? 'background: rgba(244, 63, 94, 0.05);' : ''}">
                     <td>${escapeHtml(row.eventId)}</td>
                     <td style="color: #ffffff; font-weight: 600;">${escapeHtml(row.paymentId)}</td>
                     <td>${escapeHtml(row.userId)}</td>
-                    <td>$${(row.amount / 100).toFixed(2)}</td>
+                    <td style="${isDropped ? 'color: #fb7185; font-weight: 700;' : ''}">$${(row.amount / 100).toFixed(2)}</td>
                     <td>${row.recordedInWebhooks ? '<span style="color: #34d399;">✓ Yes</span>' : '<span style="color: #f87171;">✗ No</span>'}</td>
                     <td>${row.orderCreatedInDb ? '<span style="color: #34d399;">✓ Yes</span>' : '<span style="color: #f87171; font-weight: 700;">✗ No</span>'}</td>
                     <td>${statusHtml}</td>
