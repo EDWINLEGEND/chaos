@@ -1570,6 +1570,8 @@
         activeExperiments: null,
       };
 
+      const trendFadeTimers = {};
+
       function updateTrend(indicatorId, current, previous) {
         const el = document.getElementById(indicatorId);
         if (!el) return;
@@ -1584,7 +1586,15 @@
           ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`
           : `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`;
 
+        if (trendFadeTimers[indicatorId]) {
+          clearTimeout(trendFadeTimers[indicatorId]);
+        }
+
+        // Force animation restart on subsequent delta changes
+        el.className = 'trend-indicator';
+        void el.offsetWidth;
         el.className = `trend-indicator visible ${isUp ? 'up' : 'down'}`;
+        el.style.opacity = '1';
         el.innerHTML = `${arrowSvg}<span>${sign}${Number(diff).toLocaleString()}</span>`;
 
         // Highlight the metric text briefly
@@ -1596,6 +1606,17 @@
             metricParent.style.color = '#ffffff';
           }, 1500);
         }
+
+        // Softly fade after 5 seconds of inactivity so future changes pop cleanly
+        trendFadeTimers[indicatorId] = setTimeout(() => {
+          el.style.transition = 'opacity 0.6s ease';
+          el.style.opacity = '0';
+          setTimeout(() => {
+            if (el.style.opacity === '0') {
+              el.className = 'trend-indicator';
+            }
+          }, 650);
+        }, 5000);
       }
 
       async function fetchTelemetry() {
