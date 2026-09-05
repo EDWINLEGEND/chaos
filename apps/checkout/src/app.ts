@@ -49,7 +49,7 @@ export function createApp(config: CheckoutConfig, startTime: number) {
 
     // POST /webhooks/payment-confirmed
     if (method === 'POST' && pathname === '/webhooks/payment-confirmed') {
-      await handlePaymentConfirmedWebhook(req, res);
+      await handlePaymentConfirmedWebhook(req, res, config);
       return;
     }
 

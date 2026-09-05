@@ -4,6 +4,7 @@ export interface CheckoutConfig {
   mongoUri: string;
   mongoDatabase: string;
   paymentProviderUrl: string;
+  webhookTimeoutMs: number;
 }
 
 /**
@@ -20,6 +21,11 @@ export function loadConfig(): CheckoutConfig {
   const mongoUri = process.env['MONGODB_URI'] ?? 'mongodb://127.0.0.1:27017/acme';
   const mongoDatabase = process.env['MONGODB_DATABASE'] ?? 'acme';
   const paymentProviderUrl = process.env['PAYMENT_PROVIDER_URL'] ?? 'http://127.0.0.1:3002';
+  const webhookTimeoutMs = parseInt(process.env['WEBHOOK_TIMEOUT_MS'] ?? '2000', 10);
+
+  if (isNaN(webhookTimeoutMs) || webhookTimeoutMs <= 0) {
+    throw new Error(`Invalid WEBHOOK_TIMEOUT_MS: ${process.env['WEBHOOK_TIMEOUT_MS']}`);
+  }
 
   return {
     nodeEnv,
@@ -27,5 +33,6 @@ export function loadConfig(): CheckoutConfig {
     mongoUri,
     mongoDatabase,
     paymentProviderUrl,
+    webhookTimeoutMs,
   };
 }

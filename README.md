@@ -13,7 +13,7 @@ In the OpsRoom demonstration workflow:
 ## Current Status
 
 > [!NOTE]
-> **Phase 3 Active**: The core `acme-checkout` domain service and order creation/retrieval API are functional against a real MongoDB 7 instance. The future deliberate webhook timeout bug, load generator, and Chaos UI triggers have **not** been implemented yet and will be added in subsequent phases.
+> **Phase 5 Active**: The deliberate production incident in the `payment-confirmed` webhook flow is now active. Inbound events are written to `webhook_events`, followed by an unindexed duplicate-order lookup on `orders`. If the lookup/creation query times out (bounded by `WEBHOOK_TIMEOUT_MS`, default 2000ms) or fails, the error is caught, swallowed without logging, and an `HTTP 200 {"received": true}` response is returned. This simulates the silent data divergence between payment events and created orders.
 
 ---
 
@@ -190,12 +190,15 @@ Errors:
 ## Webhook API Reference
 
 > [!IMPORTANT]
-> **Baseline Implementation**: The webhook handler currently operates normally. Inbound events are persisted to `webhook_events`, unindexed duplicate checks execute against `orders`, and errors propagate visibly as `HTTP 500`. The deliberate timeout and silent error-swallowing behavior is reserved for subsequent phases.
+> **Deliberate Production Incident**: Inbound events are durably persisted to `webhook_events`. Processing then performs an unindexed duplicate check `{ userId, status: "pending" }` against `orders` (which causes a MongoDB `COLLSCAN`). The operation is bounded by `WEBHOOK_TIMEOUT_MS` (default `2000` ms). If the query times out or throws a database error, the error is caught, **completely swallowed without logging**, and returns `HTTP 200 {"received": true}`. The order is **not** created, creating a silent divergence between recorded webhook events and created orders.
 
 ### Payment Confirmed Webhook
 **`POST /webhooks/payment-confirmed`**
 
 Simulates an asynchronous notification from an external payment gateway indicating payment success.
+
+#### Environment Configuration
+* `WEBHOOK_TIMEOUT_MS`: Milliseconds to wait before timing out the duplicate-order lookup and order creation process (default: `2000`).
 
 #### Request
 ```bash
@@ -211,7 +214,7 @@ curl -X POST http://localhost:3001/webhooks/payment-confirmed \
 ```
 
 #### Successful Order Creation (`HTTP 200 OK`)
-When no pending order exists for `userId`:
+When no pending order exists for `userId` and the query completes within `WEBHOOK_TIMEOUT_MS`:
 ```json
 {
   "success": true,
@@ -225,7 +228,7 @@ When no pending order exists for `userId`:
 ```
 
 #### Duplicate Delivery Handling (`HTTP 200 OK`)
-When a pending order already exists for `userId`:
+When a pending order already exists for `userId` and the query completes within `WEBHOOK_TIMEOUT_MS`:
 ```json
 {
   "success": true,
@@ -238,6 +241,19 @@ When a pending order already exists for `userId`:
 }
 ```
 * Note: The duplicate event is still durably recorded in `webhook_events` for reconciliation probes, but no second order is created in `orders`.
+
+#### Deliberate Timeout / Swallowed Error Path (`HTTP 200 OK`)
+When the unindexed duplicate lookup exceeds `WEBHOOK_TIMEOUT_MS` (e.g. under load or slow query conditions) or fails:
+```json
+{
+  "received": true
+}
+```
+* The event was persisted to `webhook_events`.
+* The order was **never created** in `orders`.
+* The payment provider receives `HTTP 200` so it will **not** retry delivery.
+* No internal error is leaked to the client and no error is logged to `console.error`.
+* This causes silent divergence: `count(webhook_events) > count(orders)`.
 
 ---
 

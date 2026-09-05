@@ -4,21 +4,15 @@ import {
   processPaymentConfirmedWebhook,
   type ValidatedWebhookInput,
 } from '../services/webhook-service.js';
+import type { CheckoutConfig } from '../config.js';
 
 /**
  * Handles POST /webhooks/payment-confirmed
- *
- * Normal behavior (baseline before intentional vulnerability):
- * 1. Validates payload structure at HTTP boundary.
- * 2. Persists inbound event to `webhook_events`.
- * 3. Performs duplicate-order lookup using unindexed { userId, status: "pending" }.
- * 4. Creates order if no duplicate exists.
- * 5. Returns structured JSON with HTTP 200.
- * 6. Propagates errors into HTTP 500 without swallowing.
  */
 export async function handlePaymentConfirmedWebhook(
   req: http.IncomingMessage,
-  res: http.ServerResponse
+  res: http.ServerResponse,
+  config: CheckoutConfig
 ): Promise<void> {
   try {
     const body = await parseJsonBody<Record<string, unknown>>(req);
@@ -80,7 +74,12 @@ export async function handlePaymentConfirmedWebhook(
       amount,
     };
 
-    const result = await processPaymentConfirmedWebhook(validatedInput);
+    const result = await processPaymentConfirmedWebhook(validatedInput, config.webhookTimeoutMs);
+
+    if ('received' in result && result.received === true) {
+      sendJson(res, 200, { received: true });
+      return;
+    }
 
     sendJson(res, 200, {
       success: true,
@@ -92,8 +91,6 @@ export async function handlePaymentConfirmedWebhook(
       return;
     }
 
-    console.error('[acme-checkout] Webhook processing failed:', err);
-    // Explicit error response - do NOT swallow database or processing failures in this baseline
     sendError(res, 500, 'INTERNAL_SERVER_ERROR', 'Failed to process webhook event');
   }
 }

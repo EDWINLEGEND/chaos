@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import http from 'node:http';
 import { ObjectId } from 'mongodb';
 import {
@@ -10,6 +10,7 @@ import {
 } from '@chaos/shared';
 import { createApp } from '../src/app.js';
 import { loadConfig } from '../src/config.js';
+import { webhookService } from '../src/services/webhook-service.js';
 
 describe('Payment-Confirmed Webhook Flow', () => {
   let server: http.Server;
@@ -49,6 +50,7 @@ describe('Payment-Confirmed Webhook Flow', () => {
   });
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     // Data isolation: Clean up only records created by this test suite
     if (isConnected) {
       if (testOrderIds.length > 0) {
@@ -343,6 +345,101 @@ describe('Payment-Confirmed Webhook Flow', () => {
 
       // In MongoDB explain, winningPlan.stage must be COLLSCAN
       expect(queryPlanner.winningPlan.stage).toBe('COLLSCAN');
+    });
+  });
+
+  describe('Deliberate Production Incident: Timeout & Swallowed Failure Flow', () => {
+    it('swallows duplicate-order query failure, returns HTTP 200 { received: true }, records webhook_event, skips order creation, and logs no errors', async () => {
+      if (!isConnected) return;
+
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const eventId = 'evt_deliberate_swallowed_1';
+      const paymentId = 'pay_deliberate_swallowed_1';
+      const userId = 'user_deliberate_swallowed_1';
+      testEventIds.push(eventId);
+
+      // Simulate a database timeout/error during duplicate-order lookup
+      vi.spyOn(webhookService, 'findPendingOrderByUser').mockRejectedValueOnce(
+        new Error('MongoServerSelectionError: operation timed out')
+      );
+
+      const res = await fetch(`${baseUrl}/webhooks/payment-confirmed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: eventId,
+          type: 'payment-confirmed',
+          paymentId,
+          userId,
+          amount: 4999,
+        }),
+      });
+
+      // 1. HTTP 200 returned with exact { received: true } payload
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json).toEqual({ received: true });
+      expect(json).not.toHaveProperty('error');
+      expect(json).not.toHaveProperty('success');
+
+      // 2. Webhook event is recorded in webhook_events collection
+      const eventsCol = getWebhookEventsCollection();
+      const eventInDb = await eventsCol.findOne({ eventId });
+      expect(eventInDb).not.toBeNull();
+      expect(eventInDb?.eventId).toBe(eventId);
+      expect(eventInDb?.paymentId).toBe(paymentId);
+      expect(eventInDb?.userId).toBe(userId);
+
+      // 3. Order is NOT created in orders collection
+      const ordersCol = getOrdersCollection();
+      const ordersCount = await ordersCol.countDocuments({ userId });
+      expect(ordersCount).toBe(0);
+
+      // 4. No internal error is logged or leaked to console
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it('times out when duplicate query exceeds timeoutMs and silently returns { received: true }', async () => {
+      if (!isConnected) return;
+
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const eventId = 'evt_deliberate_timeout_2';
+      const paymentId = 'pay_deliberate_timeout_2';
+      const userId = 'user_deliberate_timeout_2';
+      testEventIds.push(eventId);
+
+      // Simulate a slow database query exceeding the configured timeout
+      vi.spyOn(webhookService, 'findPendingOrderByUser').mockImplementationOnce(
+        () => new Promise((resolve) => setTimeout(resolve, 100))
+      );
+
+      // Execute with a small 20ms timeout
+      const result = await webhookService.processPaymentConfirmedWebhook(
+        {
+          eventId,
+          paymentId,
+          userId,
+          amount: 8500,
+        },
+        20
+      );
+
+      // 1. Webhook result returns swallowed { received: true }
+      expect(result).toEqual({ received: true });
+
+      // 2. Webhook event is durably recorded
+      const eventsCol = getWebhookEventsCollection();
+      const eventInDb = await eventsCol.findOne({ eventId });
+      expect(eventInDb).not.toBeNull();
+      expect(eventInDb?.eventId).toBe(eventId);
+
+      // 3. Order is NOT created
+      const ordersCol = getOrdersCollection();
+      const ordersCount = await ordersCol.countDocuments({ userId });
+      expect(ordersCount).toBe(0);
+
+      // 4. No error logged
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
   });
 });
