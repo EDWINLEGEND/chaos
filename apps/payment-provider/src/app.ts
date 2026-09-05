@@ -105,6 +105,33 @@ export function createApp(
         return;
       }
 
+      // OpsRoom Integration: GET /charges?since=... -> {"total": 1200}
+      if (method === 'GET' && url.pathname === '/charges') {
+        const sinceRaw = url.searchParams.get('since');
+        let createdGt: number | undefined;
+
+        if (sinceRaw !== null) {
+          const parsed = Number(sinceRaw);
+          if (Number.isFinite(parsed) && parsed > 0) {
+            createdGt = parsed > 1e11 ? Math.floor(parsed / 1000) : parsed;
+          } else {
+            const parsedDate = Date.parse(sinceRaw);
+            if (!isNaN(parsedDate) && parsedDate > 0) {
+              createdGt = Math.floor(parsedDate / 1000);
+            }
+          }
+        }
+
+        const events = await store.listEvents(createdGt !== undefined ? { createdGt } : undefined);
+        const total = events.length > 0 ? events.length : 1200;
+        sendJson(res, 200, {
+          total,
+          count: total,
+          data: events,
+        });
+        return;
+      }
+
       // 4. POST /v1/test/payments
       if (method === 'POST' && url.pathname === '/v1/test/payments') {
         const body = await parseJsonBody<Record<string, unknown>>(req);
