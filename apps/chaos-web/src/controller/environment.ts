@@ -1,11 +1,7 @@
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import {
-  initDatabase,
-  getOrdersCollection,
-  getWebhookEventsCollection,
-  checkDatabaseConnectivity,
-  closeDatabase,
+  createDatabaseConnection,
   type EnvironmentStatus,
 } from '@chaos/shared';
 import { experimentRegistry } from './experiment-registry.js';
@@ -52,22 +48,25 @@ export async function getEnvironmentStatus(): Promise<EnvironmentStatus> {
 
   // 3. Probe MongoDB database
   try {
-    await initDatabase({ uri: MONGODB_URI, dbName: DB_NAME });
-    const connectivity = await checkDatabaseConnectivity(2000);
-    if (connectivity.status === 'ok') {
-      mongodbStatus = 'healthy';
-      const ordersCol = getOrdersCollection();
-      const webhookCol = getWebhookEventsCollection();
+    const conn = await createDatabaseConnection({ uri: MONGODB_URI, dbName: DB_NAME });
+    try {
+      const connectivity = await conn.checkConnectivity(2000);
+      if (connectivity.status === 'ok') {
+        mongodbStatus = 'healthy';
+        const ordersCol = conn.getOrdersCollection();
+        const webhookCol = conn.getWebhookEventsCollection();
 
-      ordersCount = await ordersCol.countDocuments();
-      webhookEventsCount = await webhookCol.countDocuments();
+        ordersCount = await ordersCol.countDocuments();
+        webhookEventsCount = await webhookCol.countDocuments();
 
-      const indexes = await ordersCol.indexes();
-      supportingIndexPresent = indexes.some(
-        (idx) => idx.key && 'userId' in idx.key && 'status' in idx.key
-      );
+        const indexes = await ordersCol.indexes();
+        supportingIndexPresent = indexes.some(
+          (idx) => idx.key && 'userId' in idx.key && 'status' in idx.key
+        );
+      }
+    } finally {
+      await conn.close();
     }
-    await closeDatabase();
   } catch {
     mongodbStatus = 'down';
   }
@@ -82,6 +81,136 @@ export async function getEnvironmentStatus(): Promise<EnvironmentStatus> {
     supportingIndexPresent,
     timestamp: new Date().toISOString(),
   };
+}
+
+export async function getExplainProbe(): Promise<{
+  stage: string;
+  totalDocsExamined: number;
+  keysExamined: number;
+  executionTimeMillis: number;
+  supportingIndexPresent: boolean;
+  filter: Record<string, unknown>;
+}> {
+  const conn = await createDatabaseConnection({ uri: MONGODB_URI, dbName: DB_NAME });
+  try {
+    const ordersCol = conn.getOrdersCollection();
+    const explainResult = (await ordersCol
+      .find({ userId: 'user_traffic_00001', status: 'pending' })
+      .explain('executionStats')) as Record<string, unknown>;
+
+    const stats = (explainResult['executionStats'] ?? {}) as Record<string, unknown>;
+    const executionStages = (stats['executionStages'] ?? {}) as Record<string, unknown>;
+    const stage = String(executionStages['stage'] ?? 'UNKNOWN');
+    const totalDocsExamined = Number(stats['totalDocsExamined'] ?? 0);
+    const keysExamined = Number(stats['totalKeysExamined'] ?? 0);
+    const executionTimeMillis = Number(stats['executionTimeMillis'] ?? 0);
+
+    const indexes = await ordersCol.indexes();
+    const supportingIndexPresent = indexes.some(
+      (idx) => idx.key && 'userId' in idx.key && 'status' in idx.key
+    );
+
+    return {
+      stage,
+      totalDocsExamined,
+      keysExamined,
+      executionTimeMillis,
+      supportingIndexPresent,
+      filter: { userId: 'user_traffic_00001', status: 'pending' },
+    };
+  } finally {
+    await conn.close();
+  }
+}
+
+export async function getReconciliationReport(): Promise<{
+  paymentEventsCount: number;
+  webhookEventsCount: number;
+  ordersCount: number;
+  ordersCreatedFromTraffic: number;
+  silentLossCount: number;
+  lossRatePercentage: number;
+  recentLedger: Array<{
+    eventId: string;
+    paymentId: string;
+    userId: string;
+    amount: number;
+    recordedInWebhooks: boolean;
+    orderCreatedInDb: boolean;
+    status: 'FULFILLED' | 'SILENTLY_DROPPED';
+  }>;
+}> {
+  let paymentEvents: Array<{ id: string; paymentId: string; userId: string; amount: number }> = [];
+  try {
+    const res = await fetch(`${PAYMENT_PROVIDER_URL}/v1/events?limit=2000`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.ok) {
+      const json = (await res.json()) as {
+        data?: Array<{ id: string; paymentId: string; userId: string; amount: number }>;
+      };
+      if (Array.isArray(json.data)) {
+        paymentEvents = json.data;
+      }
+    }
+  } catch {}
+
+  const conn = await createDatabaseConnection({ uri: MONGODB_URI, dbName: DB_NAME });
+  try {
+    const ordersCol = conn.getOrdersCollection();
+    const webhookCol = conn.getWebhookEventsCollection();
+
+    const ordersCount = await ordersCol.countDocuments();
+    const webhookEventsCount = await webhookCol.countDocuments();
+
+    // Baseline seeded orders are 500,000
+    const ordersCreatedFromTraffic = Math.max(0, ordersCount - 500000);
+    const silentLossCount = Math.max(0, paymentEvents.length - ordersCreatedFromTraffic);
+    const lossRatePercentage =
+      paymentEvents.length > 0 ? Math.round((silentLossCount / paymentEvents.length) * 100) : 0;
+
+    // Check last 20 events against orders collection
+    const sampleEvents = paymentEvents.slice(-20).reverse();
+    const paymentIds = sampleEvents.map((e) => e.paymentId);
+
+    const existingOrders = await ordersCol
+      .find({ paymentId: { $in: paymentIds } })
+      .project({ paymentId: 1 })
+      .toArray();
+    const foundPaymentIds = new Set(existingOrders.map((o) => String(o['paymentId'])));
+
+    const existingWebhooks = await webhookCol
+      .find({ paymentId: { $in: paymentIds } })
+      .project({ paymentId: 1 })
+      .toArray();
+    const foundWebhookIds = new Set(existingWebhooks.map((w) => String(w['paymentId'])));
+
+    const recentLedger = sampleEvents.map((evt) => {
+      const orderCreated = foundPaymentIds.has(evt.paymentId);
+      const webhookRecorded = foundWebhookIds.has(evt.paymentId);
+      return {
+        eventId: evt.id,
+        paymentId: evt.paymentId,
+        userId: evt.userId,
+        amount: evt.amount,
+        recordedInWebhooks: webhookRecorded,
+        orderCreatedInDb: orderCreated,
+        status: orderCreated ? ('FULFILLED' as const) : ('SILENTLY_DROPPED' as const),
+      };
+    });
+
+    return {
+      paymentEventsCount: paymentEvents.length,
+      webhookEventsCount,
+      ordersCount,
+      ordersCreatedFromTraffic,
+      silentLossCount,
+      lossRatePercentage,
+      recentLedger,
+    };
+  } finally {
+    await conn.close();
+  }
 }
 
 export async function triggerEnvironmentReset(): Promise<{
@@ -117,3 +246,4 @@ export async function triggerEnvironmentReset(): Promise<{
     throw err;
   }
 }
+

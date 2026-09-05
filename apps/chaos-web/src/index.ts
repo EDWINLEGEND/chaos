@@ -7,7 +7,12 @@ import { loadConfig } from './config.js';
 import { sendJson, sendError, parseJsonBody } from './utils/http.js';
 import { experimentRegistry } from './controller/experiment-registry.js';
 import { listScenarios, getScenario, startScenario, stopScenario } from './controller/scenarios.js';
-import { getEnvironmentStatus, triggerEnvironmentReset } from './controller/environment.js';
+import {
+  getEnvironmentStatus,
+  triggerEnvironmentReset,
+  getExplainProbe,
+  getReconciliationReport,
+} from './controller/environment.js';
 import { getActivityLogs } from './controller/activity-logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -46,6 +51,20 @@ export function createChaosServer() {
       if (method === 'GET' && pathname === '/api/environment') {
         const status = await getEnvironmentStatus();
         sendJson(res, 200, status);
+        return;
+      }
+
+      // 2b. Explain plan probe: GET /api/diagnostics/explain
+      if (method === 'GET' && pathname === '/api/diagnostics/explain') {
+        const probe = await getExplainProbe();
+        sendJson(res, 200, probe);
+        return;
+      }
+
+      // 2c. Reconciliation report: GET /api/reconciliation
+      if (method === 'GET' && pathname === '/api/reconciliation') {
+        const report = await getReconciliationReport();
+        sendJson(res, 200, report);
         return;
       }
 
