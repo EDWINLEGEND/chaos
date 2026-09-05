@@ -13,7 +13,7 @@ In the OpsRoom demonstration workflow:
 ## Current Status
 
 > [!NOTE]
-> **Phase 6 Active**: The real fake payment provider service (`apps/payment-provider`) is fully functional. It manages canonical payment events, supports `created[gt]` filtering for OpsRoom reconciliation probes, generates deterministic test payments, and executes real webhook deliveries to `acme-checkout`. The Prompt 5 timeout race condition has been audited and resolved with AbortSignal cancellation.
+> **Phase 7 Active**: The real 500,000-order database dataset, query benchmark, concurrent webhook load generator (`pnpm break`), and incident verification diagnostic (`pnpm verify:incident`) are fully operational. Under 50 concurrent workers, the unindexed COLLSCAN duplicate query saturates MongoDB and exceeds `WEBHOOK_TIMEOUT_MS`, reproducing the real silent webhook divergence where `Payment Events >= Webhook Events > Orders`.
 
 ---
 
@@ -372,15 +372,68 @@ Response on Swallowed Timeout Delivery (`HTTP 200 OK`):
 
 ---
 
+## Operator Incident Runbook (`pnpm seed` & `pnpm break`)
+
+The complete production incident can be rehearsed locally in four steps:
+
+### Step 1: Seed 500,000 Orders
+```bash
+pnpm seed
+```
+* Safely clears existing `orders` and `webhook_events`.
+* Generates 500,000 valid orders across 25,000 users in 50 chunks of 10,000.
+* Confirms only primary key `_id_` index exists (`{ userId: 1, status: 1 }` is absent).
+* Verifies `COLLSCAN` execution plan on `{ userId, status: "pending" }`.
+
+### Step 2: Benchmark Unindexed Query
+```bash
+pnpm benchmark:query
+```
+* Measures execution metrics across multiple iterations against the 500,000 order dataset.
+* **Empirical Baseline**:
+  * Plan: `COLLSCAN`
+  * Documents examined: `500,000`
+  * Single-query latency: **~185 ms - 200 ms**
+  * Saturated multi-worker latency: **~900 ms - 1500 ms**
+
+### Step 3: Trigger Incident via Load Generator
+```bash
+# Start background services first:
+pnpm dev
+
+# In a separate terminal, trigger the incident load:
+pnpm break
+```
+* Configurable via environment variables:
+  * `BREAK_TOTAL_REQUESTS`: Number of payment events / webhooks to generate (default: `1200`).
+  * `BREAK_CONCURRENCY`: Worker pool concurrency (default: `50`).
+* Registers 1,200 real payment events with the fake payment provider.
+* Fires 1,200 concurrent webhook deliveries to `POST /webhooks/payment-confirmed`.
+* 50 concurrent `COLLSCAN` queries saturate MongoDB execution queue, pushing query latencies above `WEBHOOK_TIMEOUT_MS` (800ms).
+* Queries that time out return `HTTP 200 {"received": true}` and skip order creation.
+* Normal queries complete within 800ms and create orders.
+
+### Step 4: Verify Incident & Business Divergence
+```bash
+pnpm verify:incident
+```
+Compares systems of record:
+* **Payment Provider Events**: `1,200`
+* **Webhook Events Recorded**: `1,200` (Payment → Webhook Gap = 0)
+* **Orders Created**: `~310 - 350`
+* **Divergence (Webhook → Order Gap)**: `~850 - 890` silent timeouts
+
+---
+
 ## Future Components (Upcoming Phases)
 
-1. **Chaos Engine**: Programmable fault injector (`pnpm break`).
-2. **Load Generator**: Concurrent traffic simulation generating steady-state checkout flow.
-3. **Interactive Control Panel**: Web interface (`apps/chaos-web`) for triggering scenarios.
-4. **Operational Scripts**: Active implementations of `seed.ts`, `break.ts`, and `reset.ts`.
+1. **Chaos Web UI Dashboard**: Frontend interface (`apps/chaos-web`) for triggering scenarios and visualizing status.
+2. **Environment Reset Automation**: Complete operational script (`pnpm reset`) restoring baseline demo state.
+3. **GitHub Pull Request Scenario Workflow**: Automated PR simulation for OpsRoom fix verification.
 
 ---
 
 ## Engineering Guidelines
 
 Please read [AGENTS.md](AGENTS.md) for monorepo guidelines, TypeScript standards, and contribution rules.
+

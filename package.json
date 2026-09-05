@@ -12,6 +12,10 @@
     "typecheck": "tsc --build",
     "test": "vitest run",
     "db:check": "tsx scripts/check-db.ts",
+    "seed": "tsx scripts/seed.ts",
+    "break": "tsx scripts/break.ts",
+    "benchmark:query": "tsx scripts/benchmark-query.ts",
+    "verify:incident": "tsx scripts/verify-incident.ts",
     "dev": "pnpm --parallel -r --filter \"./apps/*\" run dev"
   },
   "dependencies": {

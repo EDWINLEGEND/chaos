@@ -60,23 +60,14 @@ export async function findPendingOrderByUser(
   );
 }
 
-/**
- * Checks for duplicate pending orders and creates the order if absent.
- * Checks signal.aborted before creating order to prevent late writes after timeout.
- */
 export async function lookupAndCreateOrder(
   input: ValidatedWebhookInput,
-  signal?: AbortSignal,
   timeoutMs?: number
 ): Promise<WebhookProcessResult> {
   const existingOrder = await webhookService.findPendingOrderByUser(
     input.userId,
     timeoutMs ? { maxTimeMS: timeoutMs } : undefined
   );
-
-  if (signal?.aborted) {
-    throw new Error('Operation aborted: duplicate lookup timed out');
-  }
 
   if (existingOrder) {
     return {
@@ -85,10 +76,6 @@ export async function lookupAndCreateOrder(
       created: false,
       duplicate: true,
     };
-  }
-
-  if (signal?.aborted) {
-    throw new Error('Operation aborted: duplicate lookup timed out');
   }
 
   const newOrder = await createOrder({
@@ -108,31 +95,51 @@ export async function lookupAndCreateOrder(
 
 /**
  * Processes a validated payment-confirmed webhook.
- * Bounded by timeoutMs. If the processing operation times out or encounters an error,
- * the failure is caught and an acknowledgment response is returned.
- * An AbortController guarantees that background execution cannot create an order after timeout.
+ * Bounded by timeoutMs on the unindexed duplicate-order lookup query.
+ * If the duplicate lookup times out or encounters a database error:
+ * the failure is caught, swallowed without logging, and an acknowledgment { received: true } is returned.
+ * Order creation is strictly unreachable when a timeout occurs.
  */
 export async function processPaymentConfirmedWebhook(
   input: ValidatedWebhookInput,
-  timeoutMs: number = 2000
+  timeoutMs: number = 800
 ): Promise<WebhookExecutionResult> {
   await persistWebhookEvent(input);
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => {
-    controller.abort();
-  }, timeoutMs);
-
   try {
-    return await withTimeout(
-      lookupAndCreateOrder(input, controller.signal, timeoutMs),
+    // 1. Bound duplicate-order query by timeoutMs
+    const existingOrder = await withTimeout(
+      webhookService.findPendingOrderByUser(input.userId, { maxTimeMS: timeoutMs }),
       timeoutMs
     );
+
+    // 2. Handle duplicate order if found within timeout
+    if (existingOrder) {
+      return {
+        eventId: input.eventId,
+        orderId: existingOrder._id.toString(),
+        created: false,
+        duplicate: true,
+      };
+    }
+
+    // 3. Lookup succeeded within timeoutMs with no pending order found - create order
+    const newOrder = await createOrder({
+      userId: input.userId,
+      paymentId: input.paymentId,
+      amount: input.amount,
+      status: 'pending',
+    });
+
+    return {
+      eventId: input.eventId,
+      orderId: newOrder._id.toString(),
+      created: true,
+      duplicate: false,
+    };
   } catch {
-    controller.abort();
+    // Swallowed timeout / database error
     return { received: true };
-  } finally {
-    clearTimeout(timer);
   }
 }
 
@@ -142,3 +149,4 @@ export const webhookService = {
   lookupAndCreateOrder,
   processPaymentConfirmedWebhook,
 };
+
