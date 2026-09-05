@@ -124,3 +124,44 @@ export interface ServiceHealth {
   database?: 'ok' | 'down';
   databaseDetails?: DatabaseHealth;
 }
+
+/**
+ * External event shape returned by Fake Payment Provider GET /v1/events
+ */
+export interface PaymentProviderEvent {
+  id: string;
+  type: 'payment-confirmed';
+  paymentId: string;
+  userId: string;
+  amount: number;
+  created: number; // Unix timestamp in seconds
+}
+
+/**
+ * Internal record shape including delivery metadata
+ */
+export interface PaymentRecord extends PaymentProviderEvent {
+  delivered: boolean;
+  lastDeliveryStatus?: number;
+  lastAttemptAt?: Date;
+}
+
+/**
+ * Input for creating a test payment event
+ */
+export interface CreatePaymentInput {
+  userId: string;
+  amount: number;
+  created?: number;
+}
+
+/**
+ * Result of delivering a payment event to the checkout webhook
+ */
+export interface PaymentDeliveryResult {
+  delivered: boolean;
+  paymentId: string;
+  statusCode?: number;
+  error?: string;
+  response?: unknown;
+}

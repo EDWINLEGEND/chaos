@@ -40,17 +40,22 @@ services:
   #     mongodb:
   #       condition: service_healthy
 
-  # payment-provider:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/payment-provider/Dockerfile
-  #   container_name: chaos-payment-provider
-  #   ports:
-  #     - "${PAYMENT_PROVIDER_PORT:-3002}:3002"
-  #   environment:
-  #     - NODE_ENV=development
-  #     - PAYMENT_PROVIDER_PORT=3002
-  #     - CHECKOUT_WEBHOOK_URL=http://checkout:3001/webhooks/payment
+  # ============================================================================
+  # External Payment Provider Simulator
+  # ============================================================================
+  payment-provider:
+    build:
+      context: .
+      dockerfile: apps/payment-provider/Dockerfile
+    container_name: chaos-payment-provider
+    restart: unless-stopped
+    ports:
+      - "${PAYMENT_PROVIDER_PORT:-3002}:3002"
+    environment:
+      - NODE_ENV=development
+      - PAYMENT_PROVIDER_PORT=3002
+      # In Docker network, use service name 'checkout'. For local host development, use localhost/127.0.0.1.
+      - CHECKOUT_WEBHOOK_URL=${CHECKOUT_WEBHOOK_URL:-http://checkout:3001/webhooks/payment-confirmed}
 
   # chaos-web:
   #   build:

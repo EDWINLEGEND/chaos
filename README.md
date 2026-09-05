@@ -13,7 +13,7 @@ In the OpsRoom demonstration workflow:
 ## Current Status
 
 > [!NOTE]
-> **Phase 5 Active**: The deliberate production incident in the `payment-confirmed` webhook flow is now active. Inbound events are written to `webhook_events`, followed by an unindexed duplicate-order lookup on `orders`. If the lookup/creation query times out (bounded by `WEBHOOK_TIMEOUT_MS`, default 2000ms) or fails, the error is caught, swallowed without logging, and an `HTTP 200 {"received": true}` response is returned. This simulates the silent data divergence between payment events and created orders.
+> **Phase 6 Active**: The real fake payment provider service (`apps/payment-provider`) is fully functional. It manages canonical payment events, supports `created[gt]` filtering for OpsRoom reconciliation probes, generates deterministic test payments, and executes real webhook deliveries to `acme-checkout`. The Prompt 5 timeout race condition has been audited and resolved with AbortSignal cancellation.
 
 ---
 
@@ -257,14 +257,127 @@ When the unindexed duplicate lookup exceeds `WEBHOOK_TIMEOUT_MS` (e.g. under loa
 
 ---
 
+## Payment Provider API Reference
+
+The fake payment provider (`apps/payment-provider`) simulates an external payment gateway (like Stripe) for OpsRoom demo reconciliation.
+
+In the eventual incident scenario:
+* **Payment provider believes**: payment-confirmed event was successfully delivered (`HTTP 200`).
+* **Acme Checkout**: webhook was received and durably written to `webhook_events`.
+* **Acme Orders**: order was **not created** due to unindexed COLLSCAN query timeout.
+* **Result**: `Payments (1200) == Webhook Events (1200) > Orders (1180)`.
+
+### Environment Configuration
+* `PAYMENT_PROVIDER_PORT`: Port to listen on (default: `3002`).
+* `CHECKOUT_WEBHOOK_URL`: Target URL for delivering payment webhooks (default: `http://127.0.0.1:3001/webhooks/payment-confirmed`).
+* `PAYMENT_STORE_FILE`: Optional file path for persisting demo payment records across restarts (e.g., `data/payments.json`).
+
+### 1. List Payment Events (Reconciliation Endpoint)
+**`GET /v1/events`**
+
+Query parameters:
+* `created[gt]=<timestamp>`: Optional Unix timestamp in seconds. Returns only events created strictly after this timestamp.
+
+Request:
+```bash
+curl -g "http://localhost:3002/v1/events?created[gt]=1750000000"
+```
+
+Response (`HTTP 200 OK`):
+```json
+{
+  "data": [
+    {
+      "id": "evt_0f693a14532f7317",
+      "type": "payment-confirmed",
+      "paymentId": "pay_0f693a14532f7317",
+      "userId": "user-123",
+      "amount": 4999,
+      "created": 1788603472
+    }
+  ],
+  "count": 1
+}
+```
+
+### 2. Create Test Payment
+**`POST /v1/test/payments`**
+
+Generates a deterministic test payment event in the provider store without immediately delivering it.
+
+Request:
+```bash
+curl -X POST http://localhost:3002/v1/test/payments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "user-123",
+    "amount": 4999
+  }'
+```
+
+Response (`HTTP 201 Created`):
+```json
+{
+  "id": "evt_0f693a14532f7317",
+  "type": "payment-confirmed",
+  "paymentId": "pay_0f693a14532f7317",
+  "userId": "user-123",
+  "amount": 4999,
+  "created": 1788603472
+}
+```
+
+### 3. Deliver Payment Event to Checkout Webhook
+**`POST /v1/test/payments/:paymentId/deliver`**
+
+Dispatches an HTTP POST request carrying the payment event to the configured `CHECKOUT_WEBHOOK_URL`.
+
+Request:
+```bash
+curl -X POST http://localhost:3002/v1/test/payments/pay_0f693a14532f7317/deliver
+```
+
+Response on Successful Webhook Receipt (`HTTP 200 OK`):
+```json
+{
+  "success": true,
+  "delivered": true,
+  "paymentId": "pay_0f693a14532f7317",
+  "statusCode": 200,
+  "response": {
+    "success": true,
+    "data": {
+      "eventId": "evt_0f693a14532f7317",
+      "orderId": "6a9bec55ba538657b7b516eb",
+      "created": true,
+      "duplicate": false
+    }
+  }
+}
+```
+
+Response on Swallowed Timeout Delivery (`HTTP 200 OK`):
+```json
+{
+  "success": true,
+  "delivered": true,
+  "paymentId": "pay_0f693a14532f7317",
+  "statusCode": 200,
+  "response": {
+    "received": true
+  }
+}
+```
+* Note: Because checkout returns `HTTP 200 {"received": true}`, the provider records successful delivery (`delivered: true`) and does not retry, establishing the silent data divergence.
+
+---
+
 ## Future Components (Upcoming Phases)
 
-1. **Deliberate Webhook Incident**: Webhook handler with unindexed duplicate-order query triggering COLLSCAN and timeouts.
-2. **Payment Gateway Simulator**: Realistic asynchronous webhook dispatcher.
-3. **Chaos Engine**: Programmable fault injector.
-4. **Load Generator**: Traffic simulation generating steady-state customer checkout flow.
-5. **Interactive Control Panel**: Web interface for triggering scenarios.
-6. **Operational Scripts**: Active implementations of `seed.ts`, `break.ts`, and `reset.ts`.
+1. **Chaos Engine**: Programmable fault injector (`pnpm break`).
+2. **Load Generator**: Concurrent traffic simulation generating steady-state checkout flow.
+3. **Interactive Control Panel**: Web interface (`apps/chaos-web`) for triggering scenarios.
+4. **Operational Scripts**: Active implementations of `seed.ts`, `break.ts`, and `reset.ts`.
 
 ---
 

@@ -1,56 +1,14 @@
 import http from 'node:http';
-import { createHealthReport } from '@chaos/shared';
 import { loadConfig } from './config.js';
+import { InMemoryPaymentStore } from './store.js';
+import { createApp } from './app.js';
 
 const startTime = Date.now();
 const config = loadConfig();
+const store = new InMemoryPaymentStore(config.storeFilePath);
 
-const server = http.createServer((req, res) => {
-  const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
-
-  res.setHeader('Content-Type', 'application/json');
-
-  // Health check endpoint
-  if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname === '/health') {
-    const health = createHealthReport('fake-payment-provider', startTime);
-    res.writeHead(200);
-    if (req.method === 'HEAD') {
-      res.end();
-    } else {
-      res.end(JSON.stringify(health));
-    }
-    return;
-  }
-
-  // Root endpoint info
-  if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname === '/') {
-    res.writeHead(200);
-    if (req.method === 'HEAD') {
-      res.end();
-    } else {
-      res.end(
-        JSON.stringify({
-          name: 'fake-payment-provider',
-          version: '0.1.0',
-          status: 'running',
-          endpoints: ['/health'],
-        })
-      );
-    }
-    return;
-  }
-
-  // 404 for unhandled routes
-  res.writeHead(404);
-  res.end(
-    JSON.stringify({
-      error: {
-        code: 'NOT_FOUND',
-        message: `Route not found: ${req.method} ${url.pathname}`,
-      },
-    })
-  );
-});
+const app = createApp(config, store, startTime);
+const server = http.createServer(app);
 
 server.listen(config.port, () => {
   console.log(`[fake-payment-provider] Service listening on port ${config.port} (${config.nodeEnv})`);
@@ -58,7 +16,7 @@ server.listen(config.port, () => {
 });
 
 let isShuttingDown = false;
-function shutdown(signal: string) {
+function shutdown(signal: string): void {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
@@ -83,4 +41,4 @@ function shutdown(signal: string) {
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 
-export { server, config };
+export { server, config, store, app };

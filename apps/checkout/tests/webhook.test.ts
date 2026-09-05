@@ -441,5 +441,48 @@ describe('Payment-Confirmed Webhook Flow', () => {
       // 4. No error logged
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
+
+    it('guarantees no order is created even if the delayed duplicate query resolves after timeout', async () => {
+      if (!isConnected) return;
+
+      const eventId = 'evt_deliberate_race_3';
+      const paymentId = 'pay_deliberate_race_3';
+      const userId = 'user_deliberate_race_3';
+      testEventIds.push(eventId);
+
+      let delayedResolve: (val: null) => void;
+      const delayedPromise = new Promise<null>((resolve) => {
+        delayedResolve = resolve;
+      });
+
+      // Query starts and hangs
+      vi.spyOn(webhookService, 'findPendingOrderByUser').mockImplementationOnce(
+        () => delayedPromise
+      );
+
+      // Process with small 15ms timeout
+      const result = await webhookService.processPaymentConfirmedWebhook(
+        {
+          eventId,
+          paymentId,
+          userId,
+          amount: 3000,
+        },
+        15
+      );
+
+      // Timeout occurred and returned acknowledgment
+      expect(result).toEqual({ received: true });
+
+      // Now the slow background query finally resolves late
+      delayedResolve!(null);
+      // Wait for event loop ticks
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Invariant check: orders collection MUST NOT have an order created by the late background execution!
+      const ordersCol = getOrdersCollection();
+      const count = await ordersCol.countDocuments({ userId });
+      expect(count).toBe(0);
+    });
   });
 });
