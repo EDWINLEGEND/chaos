@@ -17,20 +17,24 @@
         --border-widget-hover: rgba(255, 255, 255, 0.18);
         --inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 
-        /* Apple Watch / iOS Dark Ambient Gradients */
-        --grad-emerald: radial-gradient(circle at 85% 15%, #064e3b 0%, #022c22 45%, #01140e 100%);
-        --grad-amber: radial-gradient(circle at 50% 100%, #451a03 0%, #270f02 55%, #100600 100%);
-        --grad-cyan: radial-gradient(circle at 85% 15%, #083344 0%, #041f2a 50%, #010e14 100%);
-        --grad-blue: linear-gradient(145deg, #172554 0%, #0f172a 60%, #070a14 100%);
-        --grad-ruby: radial-gradient(circle at 80% 80%, #4c0519 0%, #27020d 55%, #120106 100%);
-        --grad-purple: radial-gradient(circle at 20% 20%, #3b0764 0%, #1e0533 55%, #0d0216 100%);
-        --grad-bronze: linear-gradient(145deg, #381a05 0%, #1f0e03 60%, #0d0601 100%);
-        --grad-neutral: linear-gradient(150deg, #18181b 0%, #111113 60%, #09090b 100%);
+        /* Apple Watch Authentic Ambient Gradients (Glow rising upwards from bottom horizon) */
+        --grad-amber: radial-gradient(135% 85% at 50% 115%, #4e1c05 0%, #290e02 45%, #100501 80%, #070200 100%);
+        --grad-bronze: radial-gradient(135% 85% at 50% 115%, #3d1b04 0%, #230f02 45%, #0f0601 80%, #070300 100%);
+        --grad-emerald: radial-gradient(135% 85% at 50% 115%, #05482e 0%, #032618 45%, #01120b 80%, #000805 100%);
+        --grad-cyan: radial-gradient(135% 85% at 50% 115%, #07435a 0%, #042431 45%, #011219 80%, #00070b 100%);
+        --grad-blue: radial-gradient(135% 85% at 50% 115%, #123678 0%, #081d43 45%, #030e21 80%, #01060f 100%);
+        --grad-ruby: radial-gradient(135% 85% at 50% 115%, #56081c 0%, #2e030d 45%, #140106 80%, #080002 100%);
+        --grad-purple: radial-gradient(135% 85% at 50% 115%, #460c75 0%, #24053e 45%, #10021c 80%, #07010d 100%);
+        --grad-neutral: radial-gradient(135% 85% at 50% 115%, #222228 0%, #151518 45%, #0d0d0f 80%, #08080a 100%);
 
-        /* High-Visibility Semantic Accents */
+        /* Active Breaking State Gradient */
+        --grad-breaking: radial-gradient(135% 85% at 50% 115%, #750f28 0%, #3e0514 45%, #190107 80%, #0a0003 100%);
+
+        /* Vivid Semantic Accents */
         --accent-emerald: #10b981;
         --accent-lime: #22c55e;
         --accent-amber: #f97316;
+        --accent-amber-bright: #ff6600;
         --accent-cyan: #06b6d4;
         --accent-blue: #3b82f6;
         --accent-ruby: #f43f5e;
@@ -38,7 +42,7 @@
 
         --text-primary: #ffffff;
         --text-secondary: rgba(255, 255, 255, 0.65);
-        --text-muted: rgba(255, 255, 255, 0.4);
+        --text-muted: rgba(255, 255, 255, 0.45);
 
         --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
         --font-mono: 'JetBrains Mono', monospace;
@@ -56,12 +60,12 @@
         color: var(--text-primary);
         min-height: 100vh;
         -webkit-font-smoothing: antialiased;
-        padding: 1.75rem 2rem;
+        padding: 1.75rem 2rem 5rem 2rem;
       }
 
       @media (max-width: 768px) {
         body {
-          padding: 1rem;
+          padding: 1rem 1rem 5rem 1rem;
         }
       }
 
@@ -74,7 +78,7 @@
       }
 
       /* ==========================================================================
-         Header & Apple-Style Segmented Navigation
+         Header & Navigation
          ========================================================================== */
       header {
         display: flex;
@@ -157,7 +161,7 @@
         gap: 0.6rem;
       }
 
-      /* Compact Action Buttons */
+      /* Pill Action Buttons */
       .btn-pill {
         background: #18181b;
         border: 1px solid var(--border-widget);
@@ -165,12 +169,12 @@
         font-family: var(--font-sans);
         font-size: 0.8rem;
         font-weight: 500;
-        padding: 0.45rem 0.95rem;
+        padding: 0.48rem 1rem;
         border-radius: 9999px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.45rem;
         transition: all 0.15s ease;
         box-shadow: var(--inner-highlight);
       }
@@ -191,6 +195,16 @@
         background: #e4e4e7;
       }
 
+      .btn-pill-danger {
+        background: rgba(244, 63, 94, 0.2);
+        color: #fb7185;
+        border: 1px solid rgba(244, 63, 94, 0.4);
+      }
+
+      .btn-pill-danger:hover:not(:disabled) {
+        background: rgba(244, 63, 94, 0.35);
+      }
+
       .btn-pill:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -202,29 +216,49 @@
       .widget {
         border-radius: 26px;
         border: 1px solid var(--border-widget);
-        box-shadow: var(--inner-highlight), 0 8px 30px rgba(0, 0, 0, 0.5);
-        padding: 1.35rem 1.4rem;
+        box-shadow: var(--inner-highlight), 0 12px 32px rgba(0, 0, 0, 0.6);
+        padding: 1.4rem 1.45rem;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         position: relative;
         overflow: hidden;
-        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
       }
 
       .widget:hover {
         border-color: var(--border-widget-hover);
+        transform: translateY(-2px);
       }
 
       /* Widget Themed Backgrounds */
-      .widget-emerald { background: var(--grad-emerald); }
       .widget-amber   { background: var(--grad-amber); }
+      .widget-bronze  { background: var(--grad-bronze); }
+      .widget-emerald { background: var(--grad-emerald); }
       .widget-cyan    { background: var(--grad-cyan); }
       .widget-blue    { background: var(--grad-blue); }
       .widget-ruby    { background: var(--grad-ruby); }
       .widget-purple  { background: var(--grad-purple); }
-      .widget-bronze  { background: var(--grad-bronze); }
       .widget-neutral { background: var(--grad-neutral); }
+
+      /* Dynamic Breaking / Processing Scenario State */
+      .widget.breaking {
+        background: var(--grad-breaking) !important;
+        border-color: rgba(244, 63, 94, 0.7) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 32px rgba(244, 63, 94, 0.45) !important;
+        animation: pulse-breaking 2s infinite ease-in-out;
+      }
+
+      @keyframes pulse-breaking {
+        0%, 100% {
+          border-color: rgba(244, 63, 94, 0.7);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 28px rgba(244, 63, 94, 0.4);
+        }
+        50% {
+          border-color: rgba(244, 63, 94, 1);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 45px rgba(244, 63, 94, 0.65);
+        }
+      }
 
       /* Widget Top Header */
       .widget-top {
@@ -237,17 +271,13 @@
       .widget-title-group {
         display: flex;
         align-items: center;
-        gap: 0.45rem;
+        gap: 0.5rem;
         color: #ffffff;
         font-size: 0.95rem;
         font-weight: 600;
       }
 
-      .widget-title-group svg {
-        opacity: 0.95;
-      }
-
-      /* Streak & Target Badges (Matching Reference Image) */
+      /* Streak & Target Badges (Matching Reference Images) */
       .widget-badge {
         display: flex;
         align-items: center;
@@ -255,19 +285,27 @@
         font-size: 0.76rem;
         font-family: var(--font-sans);
         background: rgba(255, 255, 255, 0.1);
-        padding: 0.18rem 0.55rem;
+        padding: 0.2rem 0.6rem;
         border-radius: 9999px;
         color: rgba(255, 255, 255, 0.85);
         font-weight: 500;
       }
 
       .widget-badge.streak {
-        color: #ff9838;
+        color: #ff8a3d;
+        background: rgba(255, 138, 61, 0.15);
       }
 
       .widget-badge.alert {
         color: #fb7185;
-        background: rgba(244, 63, 94, 0.2);
+        background: rgba(244, 63, 94, 0.25);
+        font-weight: 600;
+      }
+
+      .widget-badge.success {
+        color: #34d399;
+        background: rgba(16, 185, 129, 0.2);
+        font-weight: 600;
       }
 
       /* Widget Center Metrics */
@@ -281,7 +319,7 @@
       }
 
       .widget-metric {
-        font-size: 2.3rem;
+        font-size: 2.35rem;
         font-weight: 800;
         letter-spacing: -0.03em;
         color: #ffffff;
@@ -289,8 +327,24 @@
         margin-bottom: 0.85rem;
       }
 
+      /* Checkmark Circle Icon (Matching 'Wake up at 7 a.m.' reference) */
+      .widget-check-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      }
+
+      .widget-check-circle svg {
+        stroke: #120600;
+      }
+
       /* ==========================================================================
-         Progress Tracks (Type A: Pill + Micro Ticks, Type B: Segmented Blocks)
+         Progress Tracks (Matching Reference Images)
          ========================================================================== */
       .track-pill-ticks {
         display: flex;
@@ -306,13 +360,13 @@
         transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      .pill-emerald { background: var(--accent-emerald); box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
-      .pill-lime    { background: var(--accent-lime); box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
-      .pill-amber   { background: var(--accent-amber); box-shadow: 0 0 10px rgba(249, 115, 22, 0.4); }
-      .pill-cyan    { background: var(--accent-cyan); box-shadow: 0 0 10px rgba(6, 182, 212, 0.4); }
-      .pill-blue    { background: var(--accent-blue); box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); }
-      .pill-ruby    { background: var(--accent-ruby); box-shadow: 0 0 10px rgba(244, 63, 94, 0.4); }
-      .pill-purple  { background: var(--accent-purple); box-shadow: 0 0 10px rgba(168, 85, 247, 0.4); }
+      .pill-emerald { background: var(--accent-emerald); box-shadow: 0 0 12px rgba(16, 185, 129, 0.5); }
+      .pill-lime    { background: var(--accent-lime); box-shadow: 0 0 12px rgba(34, 197, 94, 0.5); }
+      .pill-amber   { background: var(--accent-amber-bright); box-shadow: 0 0 14px rgba(255, 102, 0, 0.55); }
+      .pill-cyan    { background: var(--accent-cyan); box-shadow: 0 0 12px rgba(6, 182, 212, 0.5); }
+      .pill-blue    { background: var(--accent-blue); box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); }
+      .pill-ruby    { background: var(--accent-ruby); box-shadow: 0 0 12px rgba(244, 63, 94, 0.5); }
+      .pill-purple  { background: var(--accent-purple); box-shadow: 0 0 12px rgba(168, 85, 247, 0.5); }
 
       .progress-ticks {
         display: flex;
@@ -325,12 +379,12 @@
       .tick {
         width: 2px;
         height: 7px;
-        background: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.15);
         border-radius: 1px;
         flex-shrink: 0;
       }
 
-      /* Segmented Blocks (Water / Study Track in Reference) */
+      /* Segmented Blocks ('Drink water' / 'Study' style) */
       .segmented-blocks {
         display: flex;
         align-items: center;
@@ -349,17 +403,41 @@
 
       .seg-block.active-cyan {
         background: var(--accent-cyan);
-        box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+        box-shadow: 0 0 8px rgba(6, 182, 212, 0.55);
       }
 
       .seg-block.active-emerald {
         background: var(--accent-emerald);
-        box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.55);
       }
 
       .seg-block.active-ruby {
         background: var(--accent-ruby);
-        box-shadow: 0 0 8px rgba(244, 63, 94, 0.5);
+        box-shadow: 0 0 8px rgba(244, 63, 94, 0.55);
+      }
+
+      /* Breaking Live Shimmer Line */
+      .breaking-shimmer-bar {
+        width: 100%;
+        height: 6px;
+        background: rgba(244, 63, 94, 0.2);
+        border-radius: 9999px;
+        overflow: hidden;
+        position: relative;
+        margin-top: auto;
+      }
+
+      .breaking-shimmer-fill {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, var(--accent-ruby), #ffffff, var(--accent-ruby), transparent);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite linear;
+      }
+
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
       }
 
       /* Grids */
@@ -394,13 +472,14 @@
       /* Hero Spotlight Widget */
       .hero-widget {
         border-radius: 28px;
-        padding: 1.75rem 2rem;
+        padding: 1.85rem 2rem;
         background: var(--grad-ruby);
         border: 1px solid rgba(244, 63, 94, 0.25);
         box-shadow: var(--inner-highlight), 0 12px 32px rgba(244, 63, 94, 0.15);
         display: flex;
         flex-direction: column;
         gap: 1.25rem;
+        transition: all 0.3s ease;
       }
 
       .hero-top {
@@ -426,14 +505,15 @@
         line-height: 1.5;
       }
 
+      /* Pipeline track visualizer */
       .pipeline-track {
         display: flex;
         align-items: center;
         gap: 0.6rem;
-        background: rgba(0, 0, 0, 0.4);
-        padding: 0.75rem 1.1rem;
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(0, 0, 0, 0.45);
+        padding: 0.85rem 1.15rem;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
         overflow-x: auto;
         font-family: var(--font-mono);
         font-size: 0.75rem;
@@ -445,6 +525,15 @@
         gap: 0.35rem;
         color: var(--text-secondary);
         white-space: nowrap;
+        padding: 0.2rem 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+      }
+
+      .pipeline-node.active-step {
+        background: rgba(244, 63, 94, 0.25);
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(244, 63, 94, 0.4);
       }
 
       .pipeline-node.alert { color: #fb7185; font-weight: 600; }
@@ -457,24 +546,25 @@
         font-family: var(--font-sans);
         font-size: 0.88rem;
         font-weight: 600;
-        padding: 0.7rem 1.4rem;
+        padding: 0.72rem 1.45rem;
         border-radius: 9999px;
         border: none;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        transition: all 0.15s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
       }
 
       .btn-hero-action:hover:not(:disabled) {
         transform: translateY(-1px);
         background: #f4f4f5;
+        box-shadow: 0 6px 18px rgba(255, 255, 255, 0.2);
       }
 
       .btn-hero-action:disabled {
-        opacity: 0.6;
+        opacity: 0.7;
         cursor: not-allowed;
       }
 
@@ -490,7 +580,7 @@
       .status-amber   { background: var(--accent-amber); box-shadow: 0 0 10px var(--accent-amber); }
       .status-ruby    { background: var(--accent-ruby); box-shadow: 0 0 10px var(--accent-ruby); }
 
-      /* Tables on Dense Views */
+      /* Table Styles */
       .widget-table {
         width: 100%;
         border-collapse: collapse;
@@ -500,23 +590,23 @@
 
       .widget-table th {
         text-align: left;
-        padding: 0.6rem 0.5rem;
+        padding: 0.65rem 0.6rem;
         color: var(--text-muted);
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         font-weight: 500;
       }
 
       .widget-table td {
-        padding: 0.65rem 0.5rem;
+        padding: 0.7rem 0.6rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         color: var(--text-secondary);
       }
 
-      /* Monospace Console Stream */
+      /* Monospace Console Feed */
       .console-stream {
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 0.45rem;
         font-family: var(--font-mono);
         font-size: 0.75rem;
         max-height: 380px;
@@ -527,7 +617,7 @@
       .console-line {
         display: flex;
         align-items: baseline;
-        gap: 0.6rem;
+        gap: 0.65rem;
         line-height: 1.4;
       }
 
@@ -540,7 +630,7 @@
       .console-msg { color: var(--text-secondary); word-break: break-word; }
       .console-msg.success { color: #34d399; }
       .console-msg.warn    { color: #fbbf24; }
-      .console-msg.error   { color: #f87171; }
+      .console-msg.error   { color: #f87171; font-weight: 500; }
 
       /* Tab Views Management */
       .tab-view {
@@ -553,46 +643,153 @@
         display: flex;
       }
 
-      /* Modal Component */
+      /* ==========================================================================
+         UI Consistency: Modals, Form Inputs & Custom Dropdowns
+         ========================================================================== */
       .modal-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(12px);
+        background: rgba(0, 0, 0, 0.82);
+        backdrop-filter: blur(20px);
         display: none;
         align-items: center;
         justify-content: center;
-        z-index: 1000;
-        padding: 1rem;
+        z-index: 2000;
+        padding: 1.25rem;
       }
 
       .modal-card {
-        background: #141417;
-        border: 1px solid var(--border-widget-hover);
+        background: radial-gradient(135% 85% at 50% 115%, #24242e 0%, #15151a 45%, #0e0e11 100%);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 28px;
         width: 100%;
-        max-width: 480px;
-        padding: 1.75rem;
-        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8), var(--inner-highlight);
+        max-width: 500px;
+        padding: 1.85rem;
+        box-shadow: 0 28px 60px rgba(0, 0, 0, 0.85), var(--inner-highlight);
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
+        gap: 1.35rem;
       }
 
-      .modal-input-field {
-        background: #1c1c21;
-        border: 1px solid var(--border-widget);
-        border-radius: 12px;
-        padding: 0.65rem 0.9rem;
+      /* Custom Apple-Style Dropdown Select */
+      .modal-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-color: #18181c;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        padding: 0.75rem 2.5rem 0.75rem 1rem;
         color: #ffffff;
         font-family: var(--font-sans);
         font-size: 0.85rem;
         width: 100%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .modal-select:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.35);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+      }
+
+      .modal-select option {
+        background: #18181c;
+        color: #ffffff;
+      }
+
+      /* Custom Apple-Style Inputs */
+      .modal-input-field {
+        background: #18181c;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        padding: 0.75rem 1rem;
+        color: #ffffff;
+        font-family: var(--font-sans);
+        font-size: 0.85rem;
+        width: 100%;
+        transition: all 0.2s ease;
       }
 
       .modal-input-field:focus {
         outline: none;
-        border-color: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.35);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+      }
+
+      /* ==========================================================================
+         Floating Live Logs Bottom Dock / Drawer
+         ========================================================================== */
+      /* Collapsed Pill Capsule */
+      .floating-log-pill {
+        position: fixed;
+        bottom: 1.25rem;
+        right: 2rem;
+        background: rgba(18, 18, 22, 0.92);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 9999px;
+        padding: 0.5rem 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: #ffffff;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), var(--inner-highlight);
+        z-index: 900;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .floating-log-pill:hover {
+        background: rgba(28, 28, 34, 0.96);
+        border-color: rgba(255, 255, 255, 0.22);
+        transform: translateY(-2px);
+      }
+
+      /* Expanded Floating Bottom Drawer */
+      .floating-log-drawer {
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%) translateY(105%);
+        width: calc(100% - 4rem);
+        max-width: 1320px;
+        height: 320px;
+        background: rgba(13, 13, 17, 0.95);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-bottom: none;
+        border-radius: 24px 24px 0 0;
+        box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .floating-log-drawer.expanded {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .drawer-header {
+        padding: 0.85rem 1.4rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .drawer-body {
+        flex: 1;
+        padding: 1rem 1.4rem;
+        overflow-y: auto;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
       }
     </style>
   </head>
@@ -610,7 +807,7 @@
           <span class="brand-badge">OpsRoom Target</span>
         </div>
 
-        <!-- Segmented Apple Pill Navigation Bar -->
+        <!-- Segmented iOS-Style Navigation Bar -->
         <nav class="nav-pill-group">
           <button class="nav-tab active" onclick="switchTab('overview')">
             <span>Overview</span>
@@ -649,16 +846,16 @@
       </header>
 
       <!-- ====================================================================
-           PAGE 1: OVERVIEW (Apple Widget Aesthetic)
+           PAGE 1: OVERVIEW (Apple Watch Ambient Gradient Aesthetic)
            ==================================================================== -->
       <main class="tab-view active" id="view-overview">
         <!-- Top 4 Apple Widgets -->
         <section class="widget-grid-4">
-          <!-- Widget 1: Database Orders (Emerald Theme) -->
+          <!-- Widget 1: Database Orders (Emerald Pine Theme) -->
           <div class="widget widget-emerald">
             <div class="widget-top">
               <div class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
                   <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                 </svg>
                 <span>Orders</span>
@@ -679,11 +876,11 @@
             </div>
           </div>
 
-          <!-- Widget 2: Webhooks Persisted (Cyan / Water Theme) -->
+          <!-- Widget 2: Webhooks Persisted (Cyan Ocean Theme) -->
           <div class="widget widget-cyan">
             <div class="widget-top">
               <div class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
@@ -696,23 +893,25 @@
               <div class="widget-metric" id="webhook-count">0</div>
             </div>
             <div class="segmented-blocks" id="seg-webhooks-track">
-              <div class="seg-block"></div>
-              <div class="seg-block"></div>
-              <div class="seg-block"></div>
-              <div class="seg-block"></div>
-              <div class="seg-block"></div>
-              <div class="seg-block"></div>
-              <div class="seg-block"></div>
-              <div class="seg-block"></div>
+              <div class="seg-block"></div><div class="seg-block"></div><div class="seg-block"></div><div class="seg-block"></div>
+              <div class="seg-block"></div><div class="seg-block"></div><div class="seg-block"></div><div class="seg-block"></div>
             </div>
           </div>
 
-          <!-- Widget 3: Index Precondition (Amber / Daylight Theme) -->
+          <!-- Widget 3: Index Precondition (Amber Ember Theme - Exact Match to 'Time in Daylight') -->
           <div class="widget widget-amber">
             <div class="widget-top">
               <div class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="5"/>
+                  <line x1="12" y1="1" x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/>
+                  <line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
                 </svg>
                 <span>Query Plan</span>
               </div>
@@ -727,11 +926,11 @@
             </div>
           </div>
 
-          <!-- Widget 4: Active Chaos (Purple Theme) -->
+          <!-- Widget 4: Active Chaos (Purple Violet Theme) -->
           <div class="widget widget-purple">
             <div class="widget-top">
               <div class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5">
                   <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                 </svg>
                 <span>Injections</span>
@@ -752,13 +951,13 @@
           </div>
         </section>
 
-        <!-- Spotlight Hero Widget: Primary Incident (Ruby Theme) -->
-        <section class="hero-widget">
+        <!-- Spotlight Hero Widget: Primary Incident (Ruby Crimson Horizon) -->
+        <section class="hero-widget" id="hero-primary-widget">
           <div class="hero-top">
             <div>
               <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                <span class="status-pulse-dot status-ruby"></span>
-                <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-ruby);">
+                <span class="status-pulse-dot status-ruby" id="hero-status-pulse"></span>
+                <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-ruby);" id="hero-status-title">
                   Primary Production Incident
                 </span>
                 <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">
@@ -780,21 +979,30 @@
             </button>
           </div>
 
-          <!-- Architecture Flow Representation -->
-          <div class="pipeline-track">
-            <div class="pipeline-node"><span>1. Payment Confirmed</span></div>
+          <!-- Dynamic Live Breaking Banner (Shows when executing) -->
+          <div id="hero-breaking-banner" style="display: none; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.5); padding: 0.6rem 1rem; border-radius: 12px; font-size: 0.78rem; font-family: var(--font-mono); color: #fb7185; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="status-pulse-dot status-ruby" style="animation: pulse-alert 0.8s infinite;"></span>
+              <span id="hero-breaking-text">Simulating 1,200 Concurrent Webhooks with COLLSCAN Saturation...</span>
+            </div>
+            <span id="hero-breaking-timer" style="color: #ffffff; font-weight: 600;">--s</span>
+          </div>
+
+          <!-- 5-Stage Architecture Pipeline Representation -->
+          <div class="pipeline-track" id="hero-pipeline">
+            <div class="pipeline-node" id="step-node-1"><span>1. Payment Confirmed</span></div>
             <span class="pipeline-sep">→</span>
-            <div class="pipeline-node"><span>2. Recorded in webhook_events</span></div>
+            <div class="pipeline-node" id="step-node-2"><span>2. Recorded in webhook_events</span></div>
             <span class="pipeline-sep">→</span>
-            <div class="pipeline-node alert"><span>3. COLLSCAN (>800ms)</span></div>
+            <div class="pipeline-node alert" id="step-node-3"><span>3. COLLSCAN (>800ms)</span></div>
             <span class="pipeline-sep">→</span>
-            <div class="pipeline-node alert"><span>4. Timeout Swallowed (HTTP 200)</span></div>
+            <div class="pipeline-node alert" id="step-node-4"><span>4. Timeout Swallowed (HTTP 200)</span></div>
             <span class="pipeline-sep">→</span>
-            <div class="pipeline-node critical"><span>5. Order Omitted (Silent Loss)</span></div>
+            <div class="pipeline-node critical" id="step-node-5"><span>5. Order Omitted (Silent Loss)</span></div>
           </div>
         </section>
 
-        <!-- Service Nodes Row (Apple Health / Watch Status Widgets) -->
+        <!-- Service Cluster Nodes Row -->
         <section class="widget-grid-3">
           <!-- Node 1: Checkout -->
           <div class="widget widget-neutral" style="padding: 1.15rem 1.25rem;">
@@ -841,7 +1049,7 @@
       </main>
 
       <!-- ====================================================================
-           PAGE 2: SCENARIOS (Predefined Chaos Scenarios)
+           PAGE 2: SCENARIOS (Dynamic Status & Color Changing Widgets)
            ==================================================================== -->
       <main class="tab-view" id="view-scenarios">
         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -852,10 +1060,10 @@
         </div>
 
         <div class="widget-grid-2" id="scenarios-container">
-          <!-- Dynamically Populated with Scenario Widgets -->
+          <!-- Dynamically Populated with Scenario Widgets with Reactive Colors -->
         </div>
 
-        <!-- Quick Primitives Section -->
+        <!-- Quick Fault Injections Section -->
         <div style="margin-top: 0.5rem;">
           <h3 style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">
             Quick Fault Injection Chips
@@ -886,7 +1094,7 @@
           <div class="widget widget-neutral" style="min-height: 440px;">
             <div class="widget-top">
               <span class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5">
                   <circle cx="12" cy="12" r="10"/>
                   <polyline points="12 6 12 12 16 14"/>
                 </svg>
@@ -909,7 +1117,10 @@
                 <span class="status-pulse-dot status-emerald"></span>
                 <span>Console Stream</span>
               </span>
-              <span class="widget-badge">Live Audit</span>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <button class="btn-pill" style="padding: 0.2rem 0.55rem; font-size: 0.7rem;" onclick="clearLogs()">Clear</button>
+                <span class="widget-badge">Live Audit</span>
+              </div>
             </div>
 
             <div class="console-stream" id="activity-feed">
@@ -931,7 +1142,7 @@
           <div class="widget widget-amber" style="min-height: 400px;">
             <div class="widget-top">
               <span class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2.5">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
                 <span>MongoDB Explain Probe</span>
@@ -943,7 +1154,7 @@
 
             <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;">
               <div>Query: <code>db.orders.find({ userId: "...", status: "pending" })</code></div>
-              <div style="background: rgba(0,0,0,0.4); padding: 1.1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 0.4rem;">
+              <div style="background: rgba(0,0,0,0.45); padding: 1.1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 0.4rem;">
                 <div>Winning Stage: <strong style="color: var(--accent-amber);" id="explain-stage">COLLSCAN</strong></div>
                 <div>Documents Examined: <strong id="explain-docs">500,000</strong></div>
                 <div>Keys Examined: <strong id="explain-keys">0</strong></div>
@@ -951,7 +1162,7 @@
                 <div>Compound Index: <strong style="color: #f87171;" id="explain-index">ABSENT</strong></div>
               </div>
               <div style="font-size: 0.72rem; color: var(--text-muted);">
-                OpsRoom independently probes this endpoint to establish proof of the unindexed duplicate lookup bottleneck.
+                OpsRoom independently probes this endpoint to verify that unindexed duplicate queries trigger catastrophic saturation.
               </div>
             </div>
           </div>
@@ -960,7 +1171,7 @@
           <div class="widget widget-ruby" style="min-height: 400px;">
             <div class="widget-top">
               <span class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5">
                   <line x1="18" y1="6" x2="6" y2="18"/>
                   <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
@@ -970,7 +1181,7 @@
             </div>
 
             <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;">
-              <div style="background: rgba(0,0,0,0.4); padding: 1.1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 0.4rem;">
+              <div style="background: rgba(0,0,0,0.45); padding: 1.1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 0.4rem;">
                 <div>Payment Gateway Events: <strong id="diag-payments">1,200</strong></div>
                 <div>MongoDB Webhooks Persisted: <strong id="diag-webhooks">0</strong></div>
                 <div>Orders Created in DB: <strong id="diag-orders">500,000</strong></div>
@@ -979,7 +1190,7 @@
                 </div>
               </div>
               <div style="font-size: 0.72rem; color: var(--text-muted);">
-                Payment succeeded at provider, but order never inserted into MongoDB. The divergence gap represents revenue loss.
+                Payments succeed at the external gateway, but orders are silently omitted in MongoDB. The gap represents revenue at risk.
               </div>
             </div>
           </div>
@@ -987,16 +1198,16 @@
       </main>
 
       <!-- ====================================================================
-           PAGE 5: RECONCILIATION & LEDGER (Core Business Loss Audit)
+           PAGE 5: RECONCILIATION & LEDGER (Core Business Audit)
            ==================================================================== -->
       <main class="tab-view" id="view-reconciliation">
-        <!-- 4 Reconciliation Key Widgets -->
+        <!-- 4 Reconciliation Widgets -->
         <section class="widget-grid-4">
-          <!-- Recon 1: Gateway Captured Payments (Emerald) -->
+          <!-- Recon 1: Gateway Captured (Emerald) -->
           <div class="widget widget-emerald">
             <div class="widget-top">
               <div class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
                   <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
                   <line x1="1" y1="10" x2="23" y2="10"/>
                 </svg>
@@ -1017,7 +1228,7 @@
           <div class="widget widget-cyan">
             <div class="widget-top">
               <div class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                   <polyline points="22,6 12,13 2,6"/>
                 </svg>
@@ -1039,7 +1250,7 @@
           <div class="widget widget-blue">
             <div class="widget-top">
               <div class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5">
                   <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                 </svg>
                 <span>Orders Created</span>
@@ -1063,7 +1274,7 @@
           <div class="widget widget-ruby">
             <div class="widget-top">
               <div class="widget-title-group">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5">
                   <circle cx="12" cy="12" r="10"/>
                   <line x1="12" y1="8" x2="12" y2="12"/>
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -1086,7 +1297,7 @@
         <section class="widget widget-neutral" style="min-height: 420px;">
           <div class="widget-top">
             <span class="widget-title-group">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="8" y1="6" x2="21" y2="6"/>
                 <line x1="8" y1="12" x2="21" y2="12"/>
                 <line x1="8" y1="18" x2="21" y2="18"/>
@@ -1094,7 +1305,7 @@
                 <line x1="3" y1="12" x2="3.01" y2="12"/>
                 <line x1="3" y1="18" x2="3.01" y2="18"/>
               </svg>
-              <span>Transaction Discrepancy Ledger (Recent Samples)</span>
+              <span>Transaction Discrepancy Ledger (Real Data from Services)</span>
             </span>
             <button class="btn-pill btn-pill-primary" style="padding: 0.35rem 0.85rem; font-size: 0.75rem;" onclick="fetchReconciliationData()">
               Refresh Ledger Audit
@@ -1125,45 +1336,81 @@
       </main>
     </div>
 
-    <!-- Custom Experiment Modal -->
+    <!-- ====================================================================
+         Global Floating Bottom Live Logs Drawer
+         ==================================================================== -->
+    <!-- Collapsed Floating Capsule Pill -->
+    <div class="floating-log-pill" id="floating-log-pill" onclick="toggleLogDrawer(true)">
+      <span class="status-pulse-dot status-emerald" id="floating-log-pulse"></span>
+      <span>Live Terminal Stream</span>
+      <span class="brand-badge" style="background: rgba(255,255,255,0.12); padding: 0.1rem 0.45rem;" id="floating-log-counter">0 events</span>
+      <span style="font-size: 0.75rem; color: var(--text-muted);">▲ Expand</span>
+    </div>
+
+    <!-- Expanded Floating Bottom Drawer -->
+    <div class="floating-log-drawer" id="floating-log-drawer">
+      <div class="drawer-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span class="status-pulse-dot status-emerald"></span>
+          <span style="font-size: 0.88rem; font-weight: 700; color: #ffffff;">Chaos Telemetry & Activity Stream</span>
+          <span class="brand-badge" id="drawer-log-count">0 events</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <button class="btn-pill" style="padding: 0.25rem 0.65rem; font-size: 0.72rem;" onclick="clearLogs()">Clear</button>
+          <button class="btn-pill" style="padding: 0.25rem 0.65rem; font-size: 0.72rem;" onclick="toggleLogDrawer(false)">
+            <span>▼ Minimize</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="drawer-body" id="floating-log-stream">
+        <div class="console-line">
+          <span class="console-time">--:--:--</span>
+          <span class="console-msg">Connecting to telemetry audit stream...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Experiment Modal (Apple-Style Dropdowns & Inputs) -->
     <div class="modal-overlay" id="modal-custom-experiment" onclick="if(event.target===this) closeBuilderModal()">
       <div class="modal-card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3 style="font-size: 1.05rem; font-weight: 700; color: #ffffff;">Configure Failure Injection</h3>
-          <button style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;" onclick="closeBuilderModal()">✕</button>
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: #ffffff;">Configure Failure Injection</h3>
+          <button style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.25rem;" onclick="closeBuilderModal()">✕</button>
         </div>
 
-        <form onsubmit="submitCustomExperiment(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+        <form onsubmit="submitCustomExperiment(event)" style="display: flex; flex-direction: column; gap: 1.1rem;">
           <div>
-            <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Target Service</label>
-            <select class="modal-input-field" id="form-target" onchange="updateFailureTypeOptions()" required>
+            <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Target Microservice</label>
+            <select class="modal-select" id="form-target" onchange="updateFailureTypeOptions()" required>
               <option value="acme-checkout">acme-checkout (Port 3001)</option>
               <option value="fake-payment-provider">fake-payment-provider (Port 3002)</option>
             </select>
           </div>
 
           <div>
-            <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Failure Primitive</label>
-            <select class="modal-input-field" id="form-failure" required></select>
+            <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Failure Primitive</label>
+            <select class="modal-select" id="form-failure" required></select>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
             <div>
-              <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Delay (ms)</label>
+              <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Artificial Delay (ms)</label>
               <input class="modal-input-field" type="number" id="form-delay" value="400" min="0" max="5000" />
             </div>
             <div>
-              <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Rate (%)</label>
+              <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Impact Rate (%)</label>
               <input class="modal-input-field" type="number" id="form-percentage" value="100" min="1" max="100" />
             </div>
           </div>
 
           <div>
-            <label style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Duration (seconds, max 300)</label>
+            <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 0.4rem;">Duration (seconds, max 300)</label>
             <input class="modal-input-field" type="number" id="form-duration" value="30" min="5" max="300" />
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+          <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 0.6rem;">
             <button type="button" class="btn-pill" onclick="closeBuilderModal()">Cancel</button>
             <button type="submit" class="btn-pill btn-pill-primary">Inject Failure</button>
           </div>
@@ -1172,6 +1419,9 @@
     </div>
 
     <script>
+      let isPrimaryExecuting = false;
+      let primaryTimerInterval = null;
+
       function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str)
@@ -1198,6 +1448,18 @@
           fetchReconciliationData();
         } else if (tabId === 'diagnostics') {
           runExplainProbeLive();
+        }
+      }
+
+      function toggleLogDrawer(show) {
+        const drawer = document.getElementById('floating-log-drawer');
+        const pill = document.getElementById('floating-log-pill');
+        if (show) {
+          drawer.classList.add('expanded');
+          pill.style.display = 'none';
+        } else {
+          drawer.classList.remove('expanded');
+          pill.style.display = 'flex';
         }
       }
 
@@ -1274,7 +1536,7 @@
             if (data.supportingIndexPresent) {
               indexLabel.textContent = 'IXSCAN';
               indexPill.textContent = '✓ Optimized';
-              indexPill.className = 'widget-badge';
+              indexPill.className = 'widget-badge success';
             } else {
               indexLabel.textContent = 'COLLSCAN';
               indexPill.textContent = '⚠️ Vulnerable';
@@ -1372,7 +1634,7 @@
             });
           }
 
-          // Populate Table
+          // Populate Ledger Table
           const tbody = document.getElementById('recon-ledger-body');
           if (tbody && Array.isArray(data.recentLedger)) {
             if (data.recentLedger.length === 0) {
@@ -1420,32 +1682,47 @@
               const sName = escapeHtml(s.name);
               const sTarget = escapeHtml(s.target);
               const sDesc = escapeHtml(s.description);
-              const themeClass = idx % 3 === 0 ? 'widget-amber' : idx % 3 === 1 ? 'widget-cyan' : 'widget-emerald';
+
+              // State-based dynamic coloring
+              const themeClass = isRunning
+                ? 'widget-ruby breaking'
+                : idx % 3 === 0
+                ? 'widget-amber'
+                : idx % 3 === 1
+                ? 'widget-cyan'
+                : 'widget-emerald';
 
               return `
-              <div class="widget ${themeClass}" style="min-height: 200px;">
+              <div class="widget ${themeClass}" style="min-height: 210px;">
                 <div class="widget-top">
                   <div class="widget-title-group">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${isRunning ? '#f43f5e' : 'currentColor'}" stroke-width="2.5">
                       <polygon points="5 3 19 12 5 21 5 3"/>
                     </svg>
                     <span>${sName}</span>
                   </div>
-                  <span class="widget-badge">${sTarget}</span>
+                  <span class="widget-badge ${isRunning ? 'alert' : ''}">${isRunning ? '🔥 BREAKING' : sTarget}</span>
                 </div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 1rem;">
+                <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 0.85rem;">
                   ${sDesc}
                 </div>
+
+                ${
+                  isRunning
+                    ? '<div class="breaking-shimmer-bar" style="margin-bottom: 0.85rem;"><div class="breaking-shimmer-fill"></div></div>'
+                    : ''
+                }
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
                   <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-muted);">
-                    ${isRunning ? '<span class="status-pulse-dot status-amber"></span> Running' : 'Idle'}
+                    ${isRunning ? '<span class="status-pulse-dot status-ruby"></span> Fault Active' : '● Ready / Idle'}
                   </span>
                   <button
-                    class="btn-pill ${isRunning ? '' : 'btn-pill-primary'}"
-                    style="padding: 0.35rem 0.85rem; font-size: 0.75rem;"
+                    class="btn-pill ${isRunning ? 'btn-pill-danger' : 'btn-pill-primary'}"
+                    style="padding: 0.38rem 0.95rem; font-size: 0.75rem;"
                     onclick="${isRunning ? `stopScenario('${sId}')` : `startScenario('${sId}')`}"
                   >
-                    ${isRunning ? 'Stop' : 'Run Scenario'}
+                    ${isRunning ? 'Stop Fault' : 'Run Scenario'}
                   </button>
                 </div>
               </div>
@@ -1489,9 +1766,9 @@
                   <tr>
                     <td style="font-weight: 600; color: #ffffff;">${escapeHtml(e.failureType)}</td>
                     <td>${escapeHtml(e.target)}</td>
-                    <td><span style="color: var(--accent-amber); font-weight: 600;">RUNNING</span></td>
+                    <td><span style="color: var(--accent-amber); font-weight: 600;">ACTIVE</span></td>
                     <td>
-                      <button class="btn-pill" style="padding: 0.2rem 0.6rem; font-size: 0.7rem; background: rgba(244,63,94,0.15); border-color: rgba(244,63,94,0.3); color: #f87171;" onclick="stopExperiment('${escapeHtml(e.id)}')">
+                      <button class="btn-pill btn-pill-danger" style="padding: 0.2rem 0.6rem; font-size: 0.7rem;" onclick="stopExperiment('${escapeHtml(e.id)}')">
                         Stop
                       </button>
                     </td>
@@ -1510,15 +1787,31 @@
           const res = await fetch('/api/activity');
           if (!res.ok) return;
           const json = await res.json();
-          const feed = document.getElementById('activity-feed');
-          if (!feed) return;
 
-          if (!json.data || json.data.length === 0) {
-            feed.innerHTML = '<div class="console-line"><span class="console-time">--:--:--</span><span class="console-msg">Awaiting actions...</span></div>';
+          const inPageFeed = document.getElementById('activity-feed');
+          const floatingFeed = document.getElementById('floating-log-stream');
+          const floatingCounter = document.getElementById('floating-log-counter');
+          const drawerCounter = document.getElementById('drawer-log-count');
+          const floatingPulse = document.getElementById('floating-log-pulse');
+
+          const items = json.data || [];
+          if (floatingCounter) floatingCounter.textContent = `${items.length} events`;
+          if (drawerCounter) drawerCounter.textContent = `${items.length} events`;
+
+          // Detect any error or warn in latest 3 items to flash pulse
+          const hasRecentIssue = items.slice(0, 3).some((i) => i.type === 'error' || i.type === 'warn');
+          if (floatingPulse) {
+            floatingPulse.className = `status-pulse-dot ${hasRecentIssue ? 'status-ruby' : 'status-emerald'}`;
+          }
+
+          if (items.length === 0) {
+            const emptyHtml = '<div class="console-line"><span class="console-time">--:--:--</span><span class="console-msg">Awaiting operations...</span></div>';
+            if (inPageFeed) inPageFeed.innerHTML = emptyHtml;
+            if (floatingFeed) floatingFeed.innerHTML = emptyHtml;
             return;
           }
 
-          feed.innerHTML = json.data
+          const renderedHtml = items
             .map((item) => {
               const typeClass = item.type === 'warn' ? 'warn' : item.type === 'error' ? 'error' : item.type === 'success' ? 'success' : '';
               return `
@@ -1529,15 +1822,58 @@
               `;
             })
             .join('');
+
+          if (inPageFeed) inPageFeed.innerHTML = renderedHtml;
+          if (floatingFeed) floatingFeed.innerHTML = renderedHtml;
+        } catch {}
+      }
+
+      async function clearLogs() {
+        try {
+          await fetch('/api/activity/clear', { method: 'POST' });
+          fetchActivity();
         } catch {}
       }
 
       async function startPrimaryScenario() {
         const btn = document.getElementById('btn-trigger-primary');
+        const heroWidget = document.getElementById('hero-primary-widget');
+        const breakingBanner = document.getElementById('hero-breaking-banner');
+        const breakingTimer = document.getElementById('hero-breaking-timer');
+
         if (btn) {
           btn.disabled = true;
-          btn.textContent = 'Executing 1,200 Webhooks...';
+          btn.innerHTML = `
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="status-pulse-dot" style="animation: spin 1s infinite linear;">
+              <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+              <path d="M12 2a10 10 0 0 1 10 10"/>
+            </svg>
+            <span>Executing 1,200 Webhooks...</span>
+          `;
         }
+
+        // Apply Breaking Visuals to Hero Spotlight
+        if (heroWidget) heroWidget.classList.add('breaking');
+        if (breakingBanner) breakingBanner.style.display = 'flex';
+
+        // Animate Pipeline nodes sequentially
+        const stepIds = ['step-node-1', 'step-node-2', 'step-node-3', 'step-node-4', 'step-node-5'];
+        stepIds.forEach((id, idx) => {
+          setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('active-step');
+          }, idx * 700);
+        });
+
+        // Start countdown timer
+        let secondsRemaining = 6;
+        if (breakingTimer) breakingTimer.textContent = `${secondsRemaining}s`;
+        if (primaryTimerInterval) clearInterval(primaryTimerInterval);
+        primaryTimerInterval = setInterval(() => {
+          secondsRemaining--;
+          if (breakingTimer) breakingTimer.textContent = `${secondsRemaining}s`;
+          if (secondsRemaining <= 0) clearInterval(primaryTimerInterval);
+        }, 1000);
 
         try {
           await fetch('/api/scenarios/checkout-silent-order-loss/start', { method: 'POST' });
@@ -1555,7 +1891,14 @@
                 <span>Trigger 1,200 Webhook Load</span>
               `;
             }
-          }, 6000);
+            if (heroWidget) heroWidget.classList.remove('breaking');
+            if (breakingBanner) breakingBanner.style.display = 'none';
+            stepIds.forEach((id) => {
+              const el = document.getElementById(id);
+              if (el) el.classList.remove('active-step');
+            });
+            fetchReconciliationData();
+          }, 6500);
         }
       }
 

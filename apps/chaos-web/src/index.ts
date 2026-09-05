@@ -13,7 +13,7 @@ import {
   getExplainProbe,
   getReconciliationReport,
 } from './controller/environment.js';
-import { getActivityLogs } from './controller/activity-logger.js';
+import { getActivityLogs, clearActivityLogs } from './controller/activity-logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -207,6 +207,13 @@ export function createChaosServer() {
       if (method === 'GET' && pathname === '/api/activity') {
         const logs = getActivityLogs(50);
         sendJson(res, 200, { data: logs });
+        return;
+      }
+
+      // 8b. Activity log clear: POST /api/activity/clear
+      if (method === 'POST' && pathname === '/api/activity/clear') {
+        clearActivityLogs();
+        sendJson(res, 200, { success: true, message: 'Activity logs cleared' });
         return;
       }
 
