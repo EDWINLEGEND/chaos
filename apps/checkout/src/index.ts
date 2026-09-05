@@ -1,7 +1,13 @@
 import http from 'node:http';
-import { initDatabase, closeDatabase } from '@chaos/shared';
+import {
+  createHealthReport,
+  initDatabase,
+  checkDatabaseConnectivity,
+  closeDatabase,
+  type ServiceHealth,
+} from '@chaos/shared';
 import { loadConfig } from './config.js';
-import { createApp } from './app.js';
+import { ensureIndexes } from './db/ensure-indexes.js';
 
 const startTime = Date.now();
 const config = loadConfig();
@@ -13,17 +19,72 @@ initDatabase({
   serverSelectionTimeoutMS: 3000,
   connectTimeoutMS: 5000,
 })
-  .then(() => {
+  .then(async () => {
     console.log(`[acme-checkout] Successfully connected to MongoDB at ${config.mongoDatabase}`);
+    await ensureIndexes();
   })
   .catch((err) => {
     const msg = err instanceof Error ? err.message : String(err);
     console.warn(`[acme-checkout] Initial MongoDB connection not established (${msg}). Will connect on probe.`);
   });
 
-// Create application request handler and server
-const app = createApp(config, startTime);
-const server = http.createServer(app);
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
+
+  res.setHeader('Content-Type', 'application/json');
+
+  // Health check endpoint with real lightweight MongoDB ping
+  if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname === '/health') {
+    const baseHealth = createHealthReport('acme-checkout', startTime);
+
+    // If client wasn't connected initially, attempt connection
+    let dbHealth = await checkDatabaseConnectivity(2000);
+    if (dbHealth.status !== 'ok') {
+      try {
+        await initDatabase({
+          uri: config.mongoUri,
+          dbName: config.mongoDatabase,
+          serverSelectionTimeoutMS: 2000,
+          connectTimeoutMS: 2000,
+        });
+        dbHealth = await checkDatabaseConnectivity(2000);
+      } catch {
+        // Handled below via dbHealth
+      }
+    }
+
+    const isHealthy = dbHealth.status === 'ok';
+    const statusCode = isHealthy ? 200 : 503;
+
+    const responsePayload: ServiceHealth = {
+      ...baseHealth,
+      status: isHealthy ? 'ok' : 'degraded',
+      database: dbHealth.status,
+      databaseDetails: {
+        status: dbHealth.status,
+        database: config.mongoDatabase,
+        latencyMs: dbHealth.latencyMs,
+        ...(dbHealth.error ? { error: dbHealth.error } : {}),
+      },
+    };
+
+    res.writeHead(statusCode);
+    if (req.method === 'HEAD') {
+      res.end();
+    } else {
+      res.end(JSON.stringify(responsePayload));
+    }
+    return;
+  }
+
+  // POST /webhooks/payment-confirmed
+  // POST /orders
+  // GET /orders/:id
+  // GET /orders
+  // Default 404
+  res.writeHead(404);
+  res.end(JSON.stringify({ error: 'NOT_FOUND' }));
+});
 
 // Start listening
 server.listen(config.port, () => {
@@ -33,43 +94,17 @@ server.listen(config.port, () => {
 
 // Graceful shutdown handling
 let isShuttingDown = false;
-async function shutdown(signal: string) {
+function shutdown(signal: string) {
   if (isShuttingDown) return;
   isShuttingDown = true;
-
-  console.log(`\n[acme-checkout] Received ${signal}. Starting graceful shutdown...`);
-
-  const forceExitTimer = setTimeout(() => {
-    console.error('[acme-checkout] Graceful shutdown timed out. Forcing exit.');
-    process.exit(1);
-  }, 5000);
-  forceExitTimer.unref();
-
-  // Close HTTP server
-  server.close(async (err) => {
-    if (err) {
-      console.error('[acme-checkout] Error during server close:', err);
-    } else {
-      console.log('[acme-checkout] Server closed cleanly.');
-    }
-
-    // Close MongoDB connection pool
-    try {
-      await closeDatabase();
-      console.log('[acme-checkout] MongoDB connection pool closed.');
-    } catch (dbErr) {
-      console.error('[acme-checkout] Error closing MongoDB connection:', dbErr);
-    }
-
-    process.exit(err ? 1 : 0);
+  console.log(`[acme-checkout] Received ${signal}, shutting down gracefully...`);
+  server.close(async () => {
+    console.log('[acme-checkout] HTTP server closed');
+    await closeDatabase();
+    console.log('[acme-checkout] Database connection closed');
+    process.exit(0);
   });
 }
 
-process.on('SIGINT', () => {
-  void shutdown('SIGINT');
-});
-process.on('SIGTERM', () => {
-  void shutdown('SIGTERM');
-});
-
-export { server, config, app };
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
