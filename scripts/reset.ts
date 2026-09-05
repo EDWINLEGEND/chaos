@@ -3,7 +3,6 @@ import path from 'node:path';
 import {
   initDatabase,
   getOrdersCollection,
-  getWebhookEventsCollection,
   closeDatabase,
 } from '@chaos/shared';
 import { runSeed } from './seed.js';

@@ -3,6 +3,7 @@ import { createHealthReport } from '@chaos/shared';
 import type { PaymentProviderConfig } from './config.js';
 import type { PaymentStore } from './store.js';
 import { parseJsonBody, sendJson, sendError, HttpError } from './utils/http.js';
+import { paymentChaosInterceptor } from './middleware/chaos-interceptor.js';
 
 export function createApp(
   config: PaymentProviderConfig,
@@ -11,6 +12,10 @@ export function createApp(
 ): (req: http.IncomingMessage, res: http.ServerResponse) => Promise<void> {
   return async (req: http.IncomingMessage, res: http.ServerResponse): Promise<void> => {
     try {
+      // Chaos failure interceptor & control endpoint
+      const intercepted = await paymentChaosInterceptor.handleRequest(req, res);
+      if (intercepted) return;
+
       const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
       const method = req.method ?? 'GET';
 
@@ -128,6 +133,22 @@ export function createApp(
           userId: record.userId,
           amount: record.amount,
         };
+
+        // Apply chaos latency if enabled
+        await paymentChaosInterceptor.applyDeliveryLatency();
+
+        // Simulate delivery failure if chaos failure enabled
+        if (paymentChaosInterceptor.shouldFailDelivery()) {
+          await store.updateDelivery(paymentId, { delivered: false, statusCode: 500 });
+          sendJson(res, 200, {
+            success: false,
+            delivered: false,
+            paymentId,
+            statusCode: 500,
+            error: 'Simulated payment delivery failure injected by Chaos experiment',
+          });
+          return;
+        }
 
         try {
           const response = await fetch(config.checkoutWebhookUrl, {

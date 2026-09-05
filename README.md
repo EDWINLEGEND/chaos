@@ -13,7 +13,7 @@ In the OpsRoom demonstration workflow:
 ## Current Status
 
 > [!NOTE]
-> **Phase 8 Active**: The environment reset and rehearsal system (`pnpm reset`) is operational. It provides an automated, idempotent restoration of the local MongoDB dataset (500k orders, 0 webhooks, no compound indexes), clears the payment provider demo store, restores the canonical `AGENTS.md` baseline, and cleans OpsRoom rehearsal branches/PRs on GitHub while preserving the canonical root-cause PR. See [docs/REHEARSAL.md](docs/REHEARSAL.md).
+> **Phase 9 Active**: The **Chaos Control Plane** (`apps/chaos-web`) is fully operational on `http://localhost:3000`. It features a rich glassmorphism UI and REST API for real-time telemetry, failure injection (latency, 500s, DB outage, payment failure), predefined scenario management (including primary silent order loss and 4 operational scenarios), experiment auto-stop safety timers, activity logging, and one-click environment reset (`pnpm reset`). See [docs/CHAOS.md](docs/CHAOS.md).
 
 ---
 
@@ -435,10 +435,28 @@ Restores the demo environment back to clean baseline:
 
 ---
 
-## Future Components (Upcoming Phases)
+## Chaos Control Plane & Web Dashboard (`apps/chaos-web`)
 
-1. **Chaos Web UI Dashboard**: Frontend control panel (`apps/chaos-web`) for triggering scenarios and visualizing status.
-2. **Additional Failure Scenarios**: Multi-incident triggers (network degradation, connection exhaustion).
+The Chaos Control Plane runs on port `3000` (`http://localhost:3000`) and provides an interactive, operator-friendly interface for managing incidents:
+
+```bash
+# Start the Chaos Web Control Plane:
+pnpm --filter @chaos/chaos-web dev
+```
+
+### Dashboard Features
+* **Real-Time Telemetry Polling**: Displays service health (`acme-checkout`, `fake-payment-provider`, `mongodb`), order counts, webhook counts, and validates the intentional absence of the `{ userId, status }` index.
+* **Predefined Chaos Scenarios**:
+  1. `Checkout Silent Order Loss` (*Primary Incident*): Drives 1,200 concurrent webhooks against 500k orders to reproduce the silent timeout and divergence.
+  2. `Payment Provider Outage`: Injects 100% payment delivery failure + 1,000ms latency on the payment gateway.
+  3. `Checkout API Regression`: Injects 50% HTTP 500 errors with 800ms latency on order endpoints.
+  4. `Database Degradation`: Injects 1,500ms database query latency on checkout operations.
+  5. `Traffic Surge`: Spawns a 35-worker load spike against checkout endpoints.
+* **Custom Failure Experiment Injection**: Injects targeted primitives (`api_latency`, `http_500`, `payment_failure`, `payment_latency`, `db_outage`, `db_latency`, `random_failure`, `timeout`, `bad_response`) with safe parameter bounds and auto-stop duration timers.
+* **One-Click Environment Reset**: Invokes `pnpm reset` directly from the dashboard to reseed 500,000 orders, clear webhooks, reset payments, and restore `AGENTS.md`.
+* **Activity Feed**: Real-time event log tracking experiment states and scenario progress.
+
+See [docs/CHAOS.md](docs/CHAOS.md) for full REST API specifications and architecture details.
 
 ---
 

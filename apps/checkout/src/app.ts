@@ -7,6 +7,7 @@ import {
   handleListOrders,
 } from './handlers/order-handler.js';
 import { handlePaymentConfirmedWebhook } from './handlers/webhook-handler.js';
+import { chaosInterceptor } from './middleware/chaos-interceptor.js';
 import { sendError } from './utils/http.js';
 
 export function createApp(config: CheckoutConfig, startTime: number) {
@@ -15,6 +16,10 @@ export function createApp(config: CheckoutConfig, startTime: number) {
     const url = new URL(req.url ?? '/', `http://${host}`);
     const pathname = url.pathname;
     const method = req.method ?? 'GET';
+
+    // Chaos failure interceptor & control endpoint
+    const intercepted = await chaosInterceptor.handleRequest(req, res);
+    if (intercepted) return;
 
     // Health check endpoint
     if ((method === 'GET' || method === 'HEAD') && pathname === '/health') {

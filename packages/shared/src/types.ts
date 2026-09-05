@@ -165,3 +165,82 @@ export interface PaymentDeliveryResult {
   error?: string;
   response?: unknown;
 }
+
+/**
+ * Supported Chaos Failure Primitives
+ */
+export type FailureType =
+  | 'api_latency'
+  | 'http_500'
+  | 'payment_failure'
+  | 'payment_latency'
+  | 'db_outage'
+  | 'db_latency'
+  | 'random_failure'
+  | 'timeout'
+  | 'traffic_surge'
+  | 'bad_response';
+
+export type ExperimentTarget = 'acme-checkout' | 'fake-payment-provider';
+
+export type ExperimentStatus = 'pending' | 'running' | 'stopping' | 'completed' | 'failed';
+
+export interface ExperimentParams {
+  delayMs?: number;
+  latencyMs?: number;
+  percentage?: number;
+  statusCode?: number;
+  durationSeconds?: number;
+  concurrency?: number;
+  totalRequests?: number;
+  malformedPayload?: boolean;
+}
+
+export interface Experiment {
+  id: string;
+  name: string;
+  target: ExperimentTarget;
+  failureType: FailureType;
+  params: ExperimentParams;
+  status: ExperimentStatus;
+  startedAt?: string;
+  endedAt?: string;
+  durationSeconds: number;
+}
+
+export interface ChaosScenario {
+  id: string;
+  name: string;
+  description: string;
+  target: string;
+  defaultParams: ExperimentParams;
+  status: 'idle' | 'running' | 'completed';
+  isPrimary?: boolean;
+  activeExperimentId?: string;
+}
+
+export interface EnvironmentStatus {
+  checkout: 'healthy' | 'degraded' | 'down';
+  paymentProvider: 'healthy' | 'degraded' | 'down';
+  mongodb: 'healthy' | 'degraded' | 'down';
+  activeExperiments: number;
+  ordersCount: number;
+  webhookEventsCount: number;
+  supportingIndexPresent: boolean;
+  timestamp: string;
+}
+
+export interface ChaosActivityLog {
+  id: string;
+  timestamp: string;
+  type: 'info' | 'warn' | 'error' | 'success';
+  message: string;
+  experimentId?: string;
+}
+
+export interface ChaosControlCommand {
+  action: 'ENABLE' | 'DISABLE' | 'CLEAR';
+  failureType?: FailureType;
+  params?: ExperimentParams;
+}
+

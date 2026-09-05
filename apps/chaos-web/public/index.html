@@ -3,115 +3,1112 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chaos Control Panel | OpsRoom Demo</title>
+    <title>Chaos Control Plane | OpsRoom Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        --bg-color: #0d1117;
-        --card-bg: #161b22;
-        --border-color: #30363d;
+        --bg-main: #0a0d14;
+        --bg-card: rgba(18, 24, 38, 0.7);
+        --bg-card-hover: rgba(25, 34, 54, 0.85);
+        --border-subtle: rgba(255, 255, 255, 0.08);
+        --border-focus: rgba(88, 166, 255, 0.4);
         --text-primary: #f0f6fc;
-        --text-secondary: #8b949e;
-        --accent: #58a6ff;
-        --badge-bg: #21262d;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --accent-blue: #38bdf8;
+        --accent-purple: #a855f7;
+        --accent-red: #f43f5e;
+        --accent-emerald: #10b981;
+        --accent-amber: #f59e0b;
+        --glow-red: rgba(244, 63, 94, 0.25);
+        --glow-blue: rgba(56, 189, 248, 0.2);
+        --font-display: 'Outfit', sans-serif;
+        --font-body: 'Inter', -apple-system, sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
       }
+
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
       }
+
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background-color: var(--bg-color);
+        font-family: var(--font-body);
+        background: radial-gradient(circle at 50% 0%, #151e36 0%, var(--bg-main) 70%);
         color: var(--text-primary);
         min-height: 100vh;
+        padding: 1.5rem 2rem;
+        overflow-x: hidden;
+      }
+
+      /* Layout */
+      .app-container {
+        max-width: 1400px;
+        margin: 0 auto;
         display: flex;
         flex-direction: column;
+        gap: 1.75rem;
+      }
+
+      /* Header */
+      header {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        justify-content: center;
-        padding: 2rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--border-subtle);
       }
-      .card {
-        background-color: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 2.5rem;
-        max-width: 600px;
-        width: 100%;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+      .brand-title {
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, #ffffff 40%, var(--accent-blue) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
       }
-      .badge {
-        display: inline-block;
-        background-color: var(--badge-bg);
-        color: var(--accent);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 0.25rem 0.75rem;
-        font-size: 0.8rem;
+
+      .brand-badge {
+        font-size: 0.7rem;
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        background: rgba(56, 189, 248, 0.12);
+        color: var(--accent-blue);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        letter-spacing: 0.05em;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      /* Buttons */
+      .btn {
+        font-family: var(--font-body);
         font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.55rem 1.1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        border: 1px solid transparent;
+        outline: none;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
+      }
+
+      .btn-danger:hover {
+        background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        border: 1px solid var(--border-subtle);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .btn-outline-danger {
+        background: transparent;
+        color: var(--accent-red);
+        border: 1px solid rgba(244, 63, 94, 0.4);
+      }
+
+      .btn-outline-danger:hover {
+        background: rgba(244, 63, 94, 0.15);
+      }
+
+      /* Telemetry Grid */
+      .telemetry-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+      }
+
+      .telemetry-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .telemetry-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+      }
+
+      .telemetry-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .telemetry-value {
+        font-family: var(--font-display);
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .status-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .status-healthy {
+        background-color: var(--accent-emerald);
+        box-shadow: 0 0 10px var(--accent-emerald);
+      }
+
+      .status-degraded {
+        background-color: var(--accent-amber);
+        box-shadow: 0 0 10px var(--accent-amber);
+      }
+
+      .status-down {
+        background-color: var(--accent-red);
+        box-shadow: 0 0 10px var(--accent-red);
+      }
+
+      /* Main Content Grid */
+      .main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.75rem;
+      }
+
+      @media (max-width: 1024px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .section-title {
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        font-weight: 700;
         margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
-      h1 {
-        font-size: 1.8rem;
-        margin-bottom: 0.75rem;
+
+      /* Spotlight Primary Incident Card */
+      .primary-incident-card {
+        background: linear-gradient(135deg, rgba(225, 29, 72, 0.12) 0%, rgba(18, 24, 38, 0.8) 100%);
+        border: 1px solid rgba(244, 63, 94, 0.35);
+        border-radius: 14px;
+        padding: 1.75rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
       }
-      p {
+
+      .primary-incident-card::after {
+        content: 'PRD PRIMARY INCIDENT';
+        position: absolute;
+        top: 1.25rem;
+        right: 1.5rem;
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        background: rgba(244, 63, 94, 0.2);
+        color: #fda4af;
+        border: 1px solid rgba(244, 63, 94, 0.4);
+        padding: 0.25rem 0.6rem;
+        border-radius: 6px;
+      }
+
+      .primary-title {
+        font-family: var(--font-display);
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin-bottom: 0.6rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .primary-desc {
         color: var(--text-secondary);
-        line-height: 1.6;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        margin-bottom: 1.25rem;
+        max-width: 85%;
+      }
+
+      .primary-metrics {
+        display: flex;
+        gap: 1.5rem;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .pm-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+
+      .pm-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .pm-val {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      /* Quick Actions Grid */
+      .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 0.85rem;
         margin-bottom: 1.5rem;
       }
-      .services-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-top: 1.5rem;
+
+      .quick-btn {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
       }
-      .service-item {
-        background-color: var(--bg-color);
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        padding: 1rem;
+
+      .quick-btn:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--border-focus);
+        transform: translateY(-2px);
       }
-      .service-name {
+
+      .quick-icon {
+        font-size: 1.25rem;
+      }
+
+      .quick-title {
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: var(--text-primary);
       }
-      .service-status {
+
+      .quick-sub {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+      }
+
+      /* Scenario Cards */
+      .scenarios-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .scenario-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+      }
+
+      .scenario-card:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        background: var(--bg-card-hover);
+      }
+
+      .scenario-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+      }
+
+      .scenario-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+      }
+
+      .scenario-target {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-secondary);
+      }
+
+      .scenario-desc {
         font-size: 0.8rem;
         color: var(--text-secondary);
-        margin-top: 0.25rem;
+        line-height: 1.45;
+        margin-bottom: 1rem;
+        flex-grow: 1;
+      }
+
+      /* Active Experiments & Activity Log */
+      .panel-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .experiments-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+
+      .experiments-table th {
+        text-align: left;
+        color: var(--text-muted);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .experiments-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      }
+
+      .badge-running {
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--accent-emerald);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 0.15rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+
+      .badge-completed {
+        background: rgba(148, 163, 184, 0.1);
+        color: var(--text-muted);
+        padding: 0.15rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+      }
+
+      /* Activity Feed */
+      .activity-feed {
+        max-height: 420px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .activity-item {
+        font-size: 0.78rem;
+        padding: 0.6rem 0.75rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 6px;
+        display: flex;
+        gap: 0.6rem;
+        align-items: baseline;
+      }
+
+      .activity-time {
+        font-family: var(--font-mono);
+        color: var(--text-muted);
+        font-size: 0.7rem;
+      }
+
+      .activity-msg {
+        color: var(--text-secondary);
+        line-height: 1.4;
+      }
+
+      /* Modal */
+      .modal-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(8px);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal {
+        background: #111827;
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      }
+
+      .modal-title {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+
+      .form-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+
+      .form-control {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-subtle);
+        border-radius: 6px;
+        padding: 0.55rem 0.75rem;
+        color: var(--text-primary);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        outline: none;
+      }
+
+      .form-control:focus {
+        border-color: var(--accent-blue);
       }
     </style>
   </head>
   <body>
-    <main class="card">
-      <span class="badge">OpsRoom Demo Target</span>
-      <h1>Chaos Control Panel</h1>
-      <p>
-        Chaos is the standalone internal demo system acting as the "patient" for OpsRoom (the "doctor").
-        Control panel interactions and failure scenarios will be built here in subsequent tasks.
-      </p>
+    <div class="app-container">
+      <!-- Header -->
+      <header>
+        <div>
+          <div class="brand-title">
+            <span>⚡ CHAOS</span>
+            <span class="brand-badge">CONTROL PLANE</span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem">
+            Deliberate Failure Injection & Incident Simulation for OpsRoom
+          </p>
+        </div>
+        <div class="header-actions">
+          <button id="btn-open-builder" class="btn btn-secondary" onclick="openBuilderModal()">
+            <span>➕</span> Custom Experiment
+          </button>
+          <button id="btn-reset" class="btn btn-danger" onclick="triggerReset()">
+            <span>🔄</span> Reset Environment
+          </button>
+        </div>
+      </header>
 
-      <div class="services-grid">
-        <div class="service-item">
-          <div class="service-name">acme-checkout</div>
-          <div class="service-status">Port 3001 &bull; Ready</div>
+      <!-- Telemetry Status Bar -->
+      <section class="telemetry-bar">
+        <div class="telemetry-card">
+          <div class="telemetry-label">
+            <span>Acme Checkout</span>
+            <span id="checkout-dot" class="status-dot status-down"></span>
+          </div>
+          <div id="checkout-status" class="telemetry-value">Probing...</div>
         </div>
-        <div class="service-item">
-          <div class="service-name">fake-payment-provider</div>
-          <div class="service-status">Port 3002 &bull; Ready</div>
+
+        <div class="telemetry-card">
+          <div class="telemetry-label">
+            <span>Fake Payment Provider</span>
+            <span id="provider-dot" class="status-dot status-down"></span>
+          </div>
+          <div id="provider-status" class="telemetry-value">Probing...</div>
         </div>
-        <div class="service-item">
-          <div class="service-name">MongoDB 7</div>
-          <div class="service-status">Port 27017 &bull; Ready</div>
+
+        <div class="telemetry-card">
+          <div class="telemetry-label">
+            <span>MongoDB 7</span>
+            <span id="mongo-dot" class="status-dot status-down"></span>
+          </div>
+          <div id="mongo-status" class="telemetry-value">Probing...</div>
         </div>
-        <div class="service-item">
-          <div class="service-name">Chaos Web</div>
-          <div class="service-status">Port 3000 &bull; Active</div>
+
+        <div class="telemetry-card">
+          <div class="telemetry-label">
+            <span>Orders in DB</span>
+            <span style="font-size: 0.7rem; color: var(--text-muted)">TARGET: 500k</span>
+          </div>
+          <div id="orders-count" class="telemetry-value">--</div>
         </div>
+
+        <div class="telemetry-card">
+          <div class="telemetry-label">
+            <span>Active Failures</span>
+            <span id="exp-badge" class="badge-completed">0 ACTIVE</span>
+          </div>
+          <div id="active-count" class="telemetry-value">0</div>
+        </div>
+      </section>
+
+      <!-- Main Workspace -->
+      <main class="main-grid">
+        <!-- Left Column: Scenarios & Actions -->
+        <div>
+          <!-- Spotlight Primary Incident Card -->
+          <div class="primary-incident-card">
+            <div class="primary-title">
+              <span>🚨</span> Checkout Silent Order Loss
+            </div>
+            <p class="primary-desc">
+              Executes the central PRD failure scenario: drives concurrent payment webhooks through the unindexed
+              duplicate order query <code style="color: #fca5a5">{ userId, status: "pending" }</code>, triggering
+              real MongoDB COLLSCAN saturation, timeout, and silent order loss.
+            </p>
+
+            <div class="primary-metrics">
+              <div class="pm-item">
+                <span class="pm-label">Target</span>
+                <span class="pm-val">acme-checkout</span>
+              </div>
+              <div class="pm-item">
+                <span class="pm-label">Concurrency</span>
+                <span class="pm-val">50 workers</span>
+              </div>
+              <div class="pm-item">
+                <span class="pm-label">Total Requests</span>
+                <span class="pm-val">1,200 webhooks</span>
+              </div>
+              <div class="pm-item">
+                <span class="pm-label">Expected Divergence</span>
+                <span class="pm-val" style="color: #f43f5e">&gt; 800 lost orders</span>
+              </div>
+            </div>
+
+            <button
+              id="btn-trigger-primary"
+              class="btn btn-danger"
+              onclick="startPrimaryScenario()"
+              style="padding: 0.75rem 1.5rem; font-size: 0.95rem"
+            >
+              <span>🔥</span> Trigger Primary Incident
+            </button>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <h2 class="section-title"><span>⚡</span> Rapid Failure Triggers</h2>
+          <div class="quick-actions-grid">
+            <button class="quick-btn" onclick="quickInject('api_latency', { delayMs: 800 })">
+              <span class="quick-icon">🐌</span>
+              <span class="quick-title">+800ms Latency</span>
+              <span class="quick-sub">acme-checkout</span>
+            </button>
+
+            <button class="quick-btn" onclick="quickInject('http_500', { percentage: 50, statusCode: 500 })">
+              <span class="quick-icon">💥</span>
+              <span class="quick-title">50% HTTP 500</span>
+              <span class="quick-sub">acme-checkout</span>
+            </button>
+
+            <button class="quick-btn" onclick="quickInject('payment_failure', { percentage: 100 })">
+              <span class="quick-icon">💳</span>
+              <span class="quick-title">Payment Failure</span>
+              <span class="quick-sub">fake-payment-provider</span>
+            </button>
+
+            <button class="quick-btn" onclick="quickInject('payment_latency', { delayMs: 1200 })">
+              <span class="quick-icon">⏱️</span>
+              <span class="quick-title">Payment Latency</span>
+              <span class="quick-sub">fake-payment-provider</span>
+            </button>
+
+            <button class="quick-btn" onclick="quickInject('db_outage', { percentage: 100 })">
+              <span class="quick-icon">🗄️</span>
+              <span class="quick-title">DB Outage</span>
+              <span class="quick-sub">acme-checkout</span>
+            </button>
+
+            <button class="quick-btn" onclick="quickInject('bad_response', {})">
+              <span class="quick-icon">⚠️</span>
+              <span class="quick-title">Bad Response</span>
+              <span class="quick-sub">acme-checkout</span>
+            </button>
+          </div>
+
+          <!-- Predefined Scenarios -->
+          <h2 class="section-title"><span>📋</span> Predefined Incident Scenarios</h2>
+          <div class="scenarios-grid" id="scenarios-container">
+            <!-- Populated via JavaScript -->
+          </div>
+        </div>
+
+        <!-- Right Column: Active Experiments & Activity Log -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem">
+          <!-- Active Experiments Card -->
+          <div class="panel-card">
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <h3 style="font-size: 0.95rem; font-weight: 700">Active Experiments</h3>
+              <span id="active-badge-sub" style="font-size: 0.75rem; color: var(--text-muted)">0 Running</span>
+            </div>
+            <div id="experiments-list">
+              <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0">
+                No active experiments running
+              </p>
+            </div>
+          </div>
+
+          <!-- Live Activity Log -->
+          <div class="panel-card" style="flex-grow: 1">
+            <div style="display: flex; justify-content: space-between; align-items: center">
+              <h3 style="font-size: 0.95rem; font-weight: 700">Chaos Activity Log</h3>
+              <span style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono)">REALTIME</span>
+            </div>
+            <div class="activity-feed" id="activity-feed">
+              <!-- Populated via JavaScript -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Custom Experiment Builder Modal -->
+    <div class="modal-backdrop" id="builder-modal">
+      <div class="modal">
+        <h3 class="modal-title">Create Custom Chaos Experiment</h3>
+        <form id="experiment-form" onsubmit="submitCustomExperiment(event)">
+          <div class="form-group">
+            <label class="form-label">Target Service</label>
+            <select class="form-control" id="form-target" onchange="updateFailureTypeOptions()" required>
+              <option value="acme-checkout">acme-checkout (Port 3001)</option>
+              <option value="fake-payment-provider">fake-payment-provider (Port 3002)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Failure Primitive</label>
+            <select class="form-control" id="form-failure" required>
+              <option value="api_latency">API Latency (delay in ms)</option>
+              <option value="http_500">HTTP 500 Errors</option>
+              <option value="db_outage">Database Outage (503 Service Unavailable)</option>
+              <option value="db_latency">Database Latency</option>
+              <option value="random_failure">Random Failure</option>
+              <option value="bad_response">Bad / Malformed Response</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Intensity / Percentage (%)</label>
+            <input type="number" class="form-control" id="form-percentage" value="100" min="1" max="100" required />
+          </div>
+
+          <div class="form-group" id="group-delay">
+            <label class="form-label">Injected Delay (ms, max 5000)</label>
+            <input type="number" class="form-control" id="form-delay" value="800" min="0" max="5000" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Duration (seconds, max 300)</label>
+            <input type="number" class="form-control" id="form-duration" value="30" min="1" max="300" required />
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem">
+            <button type="button" class="btn btn-secondary" onclick="closeBuilderModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Launch Experiment</button>
+          </div>
+        </form>
       </div>
-    </main>
+    </div>
+
+    <!-- JavaScript Controller -->
+    <script>
+      let isPrimaryRunning = false;
+
+      function updateFailureTypeOptions() {
+        const target = document.getElementById('form-target').value;
+        const failureSelect = document.getElementById('form-failure');
+        failureSelect.innerHTML = '';
+
+        if (target === 'acme-checkout') {
+          failureSelect.innerHTML = `
+            <option value="api_latency">API Latency (delay in ms)</option>
+            <option value="http_500">HTTP 500 Errors</option>
+            <option value="db_outage">Database Outage (503 Service Unavailable)</option>
+            <option value="db_latency">Database Latency</option>
+            <option value="random_failure">Random Failure</option>
+            <option value="bad_response">Bad / Malformed Response</option>
+          `;
+        } else {
+          failureSelect.innerHTML = `
+            <option value="payment_failure">Payment Delivery Failure (HTTP 500)</option>
+            <option value="payment_latency">Payment Delivery Latency</option>
+          `;
+        }
+      }
+
+      function openBuilderModal() {
+        document.getElementById('builder-modal').style.display = 'flex';
+      }
+
+      function closeBuilderModal() {
+        document.getElementById('builder-modal').style.display = 'none';
+      }
+
+      async function fetchTelemetry() {
+        try {
+          const res = await fetch('/api/environment');
+          if (!res.ok) return;
+          const data = await res.json();
+
+          // Checkout status
+          const chkStatus = document.getElementById('checkout-status');
+          const chkDot = document.getElementById('checkout-dot');
+          chkStatus.textContent = data.checkout.toUpperCase();
+          chkDot.className = `status-dot status-${data.checkout}`;
+
+          // Payment Provider status
+          const prvStatus = document.getElementById('provider-status');
+          const prvDot = document.getElementById('provider-dot');
+          prvStatus.textContent = data.paymentProvider.toUpperCase();
+          prvDot.className = `status-dot status-${data.paymentProvider}`;
+
+          // Mongo status
+          const mngStatus = document.getElementById('mongo-status');
+          const mngDot = document.getElementById('mongo-dot');
+          mngStatus.textContent = data.mongodb.toUpperCase();
+          mngDot.className = `status-dot status-${data.mongodb}`;
+
+          // Orders count
+          document.getElementById('orders-count').textContent = Number(data.ordersCount).toLocaleString();
+
+          // Active count
+          document.getElementById('active-count').textContent = data.activeExperiments;
+          const expBadge = document.getElementById('exp-badge');
+          if (data.activeExperiments > 0) {
+            expBadge.className = 'badge-running';
+            expBadge.textContent = `${data.activeExperiments} ACTIVE`;
+          } else {
+            expBadge.className = 'badge-completed';
+            expBadge.textContent = '0 ACTIVE';
+          }
+        } catch {
+          // Silent polling retry
+        }
+      }
+
+      async function fetchScenarios() {
+        try {
+          const res = await fetch('/api/scenarios');
+          if (!res.ok) return;
+          const json = await res.json();
+          const container = document.getElementById('scenarios-container');
+
+          const otherScenarios = (json.data || []).filter((s) => !s.isPrimary);
+          container.innerHTML = otherScenarios
+            .map((s) => {
+              const isRunning = s.status === 'running';
+              return `
+              <div class="scenario-card">
+                <div>
+                  <div class="scenario-header">
+                    <span class="scenario-name">${s.name}</span>
+                    <span class="scenario-target">${s.target}</span>
+                  </div>
+                  <p class="scenario-desc">${s.description}</p>
+                </div>
+                <button
+                  class="btn ${isRunning ? 'btn-outline-danger' : 'btn-secondary'}"
+                  onclick="${isRunning ? `stopScenario('${s.id}')` : `startScenario('${s.id}')`}"
+                >
+                  <span>${isRunning ? '⏹️' : '▶️'}</span> ${isRunning ? 'Stop Scenario' : 'Start Scenario'}
+                </button>
+              </div>
+            `;
+            })
+            .join('');
+        } catch {}
+      }
+
+      async function fetchExperiments() {
+        try {
+          const res = await fetch('/api/experiments');
+          if (!res.ok) return;
+          const json = await res.json();
+          const list = document.getElementById('experiments-list');
+          const active = (json.data || []).filter((e) => e.status === 'running');
+
+          document.getElementById('active-badge-sub').textContent = `${active.length} Running`;
+
+          if (active.length === 0) {
+            list.innerHTML = `
+              <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0">
+                No active experiments running
+              </p>
+            `;
+            return;
+          }
+
+          list.innerHTML = `
+            <table class="experiments-table">
+              <thead>
+                <tr>
+                  <th>Experiment</th>
+                  <th>Target</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${active
+                  .map(
+                    (e) => `
+                  <tr>
+                    <td style="font-weight: 600">${e.failureType}</td>
+                    <td><code>${e.target}</code></td>
+                    <td><span class="badge-running">RUNNING</span></td>
+                    <td>
+                      <button class="btn btn-outline-danger" style="padding: 0.2rem 0.6rem; font-size: 0.75rem" onclick="stopExperiment('${e.id}')">
+                        Stop
+                      </button>
+                    </td>
+                  </tr>
+                `
+                  )
+                  .join('')}
+              </tbody>
+            </table>
+          `;
+        } catch {}
+      }
+
+      async function fetchActivity() {
+        try {
+          const res = await fetch('/api/activity');
+          if (!res.ok) return;
+          const json = await res.json();
+          const feed = document.getElementById('activity-feed');
+
+          if (!json.data || json.data.length === 0) {
+            feed.innerHTML = '<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 1rem 0">No activity yet</p>';
+            return;
+          }
+
+          feed.innerHTML = json.data
+            .map(
+              (item) => `
+              <div class="activity-item">
+                <span class="activity-time">${item.timestamp}</span>
+                <span class="activity-msg">${item.message}</span>
+              </div>
+            `
+            )
+            .join('');
+        } catch {}
+      }
+
+      async function quickInject(failureType, params) {
+        const target = failureType.startsWith('payment_') ? 'fake-payment-provider' : 'acme-checkout';
+        try {
+          await fetch('/api/experiments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              target,
+              failureType,
+              params,
+              durationSeconds: 30,
+            }),
+          });
+          refreshAll();
+        } catch (err) {
+          alert('Failed to inject failure: ' + err.message);
+        }
+      }
+
+      async function startPrimaryScenario() {
+        const btn = document.getElementById('btn-trigger-primary');
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Incident In Progress (Executing Load)...';
+
+        try {
+          await fetch('/api/scenarios/checkout-silent-order-loss/start', { method: 'POST' });
+          refreshAll();
+        } catch (err) {
+          alert('Failed to start scenario: ' + err.message);
+        } finally {
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<span>🔥</span> Trigger Primary Incident';
+          }, 5000);
+        }
+      }
+
+      async function startScenario(id) {
+        try {
+          await fetch(`/api/scenarios/${id}/start`, { method: 'POST' });
+          refreshAll();
+        } catch (err) {
+          alert('Error: ' + err.message);
+        }
+      }
+
+      async function stopScenario(id) {
+        try {
+          await fetch(`/api/scenarios/${id}/stop`, { method: 'POST' });
+          refreshAll();
+        } catch (err) {
+          alert('Error: ' + err.message);
+        }
+      }
+
+      async function stopExperiment(id) {
+        try {
+          await fetch(`/api/experiments/${id}/stop`, { method: 'POST' });
+          refreshAll();
+        } catch (err) {
+          alert('Error: ' + err.message);
+        }
+      }
+
+      async function submitCustomExperiment(e) {
+        e.preventDefault();
+        const target = document.getElementById('form-target').value;
+        const failureType = document.getElementById('form-failure').value;
+        const percentage = parseInt(document.getElementById('form-percentage').value, 10);
+        const delayMs = parseInt(document.getElementById('form-delay').value, 10);
+        const durationSeconds = parseInt(document.getElementById('form-duration').value, 10);
+
+        try {
+          await fetch('/api/experiments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              target,
+              failureType,
+              params: { percentage, delayMs },
+              durationSeconds,
+            }),
+          });
+          closeBuilderModal();
+          refreshAll();
+        } catch (err) {
+          alert('Error: ' + err.message);
+        }
+      }
+
+      async function triggerReset() {
+        if (!confirm('Are you sure you want to reset the Chaos environment? This will restore 500,000 orders, clear webhooks, reset payments, and restore AGENTS.md.')) {
+          return;
+        }
+
+        const btn = document.getElementById('btn-reset');
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Resetting...';
+
+        try {
+          const res = await fetch('/api/environment/reset', { method: 'POST' });
+          const json = await res.json();
+          alert('Environment Reset Complete: ' + json.mongo);
+          refreshAll();
+        } catch (err) {
+          alert('Reset Error: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<span>🔄</span> Reset Environment';
+        }
+      }
+
+      function refreshAll() {
+        fetchTelemetry();
+        fetchScenarios();
+        fetchExperiments();
+        fetchActivity();
+      }
+
+      // Initial load and periodic polling
+      refreshAll();
+      setInterval(refreshAll, 3000);
+    </script>
   </body>
 </html>
