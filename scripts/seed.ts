@@ -23,14 +23,16 @@ function isSafeTarget(uri: string): boolean {
       host === 'localhost' ||
       host === '::1' ||
       host === 'chaos-mongodb' ||
-      host === 'mongo'
+      host === 'mongo' ||
+      host === 'mongodb'
     );
   } catch {
     const lowercase = uri.toLowerCase();
     return (
       lowercase.includes('127.0.0.1') ||
       lowercase.includes('localhost') ||
-      lowercase.includes('chaos-mongodb')
+      lowercase.includes('chaos-mongodb') ||
+      lowercase.includes('mongodb')
     );
   }
 }
