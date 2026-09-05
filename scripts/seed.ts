@@ -15,13 +15,24 @@ const MONGODB_URI = process.env['MONGODB_URI'] ?? 'mongodb://127.0.0.1:27017/acm
 const DB_NAME = process.env['MONGODB_DATABASE'] ?? 'acme';
 
 function isSafeTarget(uri: string): boolean {
-  const lowercase = uri.toLowerCase();
-  return (
-    lowercase.includes('127.0.0.1') ||
-    lowercase.includes('localhost') ||
-    lowercase.includes('mongodb:') ||
-    lowercase.includes('chaos-mongodb')
-  );
+  try {
+    const parsed = new URL(uri);
+    const host = parsed.hostname.toLowerCase();
+    return (
+      host === '127.0.0.1' ||
+      host === 'localhost' ||
+      host === '::1' ||
+      host === 'chaos-mongodb' ||
+      host === 'mongo'
+    );
+  } catch {
+    const lowercase = uri.toLowerCase();
+    return (
+      lowercase.includes('127.0.0.1') ||
+      lowercase.includes('localhost') ||
+      lowercase.includes('chaos-mongodb')
+    );
+  }
 }
 
 function getRandomStatus(): OrderStatus {

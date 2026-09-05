@@ -32,6 +32,7 @@ export function createApp(
             '/v1/events',
             '/v1/test/payments',
             '/v1/test/payments/:paymentId/deliver',
+            '/v1/test/reset',
           ],
         });
         return;
@@ -178,7 +179,17 @@ export function createApp(
         return;
       }
 
-      // 6. Route not found
+      // 6. POST /v1/test/reset
+      if (method === 'POST' && url.pathname === '/v1/test/reset') {
+        await store.clear();
+        sendJson(res, 200, {
+          reset: true,
+          count: 0,
+        });
+        return;
+      }
+
+      // 7. Route not found
       sendError(res, 404, 'NOT_FOUND', `Route not found: ${method} ${url.pathname}`);
     } catch (err) {
       if (err instanceof HttpError) {

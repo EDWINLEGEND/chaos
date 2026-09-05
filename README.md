@@ -13,7 +13,7 @@ In the OpsRoom demonstration workflow:
 ## Current Status
 
 > [!NOTE]
-> **Phase 7 Active**: The real 500,000-order database dataset, query benchmark, concurrent webhook load generator (`pnpm break`), and incident verification diagnostic (`pnpm verify:incident`) are fully operational. Under 50 concurrent workers, the unindexed COLLSCAN duplicate query saturates MongoDB and exceeds `WEBHOOK_TIMEOUT_MS`, reproducing the real silent webhook divergence where `Payment Events >= Webhook Events > Orders`.
+> **Phase 8 Active**: The environment reset and rehearsal system (`pnpm reset`) is operational. It provides an automated, idempotent restoration of the local MongoDB dataset (500k orders, 0 webhooks, no compound indexes), clears the payment provider demo store, restores the canonical `AGENTS.md` baseline, and cleans OpsRoom rehearsal branches/PRs on GitHub while preserving the canonical root-cause PR. See [docs/REHEARSAL.md](docs/REHEARSAL.md).
 
 ---
 
@@ -423,13 +423,22 @@ Compares systems of record:
 * **Orders Created**: `~310 - 350`
 * **Divergence (Webhook → Order Gap)**: `~850 - 890` silent timeouts
 
+### Step 5: Reset Environment for Next Rehearsal
+```bash
+pnpm reset
+```
+Restores the demo environment back to clean baseline:
+* Clears payments and orders, drops extraneous indexes, and reseeds 500,000 orders.
+* Restores pristine `AGENTS.md` rules.
+* Cleans rehearsal PRs and branches on GitHub matching `opsroom/*`.
+* Preserves canonical root-cause PR.
+
 ---
 
 ## Future Components (Upcoming Phases)
 
-1. **Chaos Web UI Dashboard**: Frontend interface (`apps/chaos-web`) for triggering scenarios and visualizing status.
-2. **Environment Reset Automation**: Complete operational script (`pnpm reset`) restoring baseline demo state.
-3. **GitHub Pull Request Scenario Workflow**: Automated PR simulation for OpsRoom fix verification.
+1. **Chaos Web UI Dashboard**: Frontend control panel (`apps/chaos-web`) for triggering scenarios and visualizing status.
+2. **Additional Failure Scenarios**: Multi-incident triggers (network degradation, connection exhaustion).
 
 ---
 

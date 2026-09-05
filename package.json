@@ -16,6 +16,8 @@
     "break": "tsx scripts/break.ts",
     "benchmark:query": "tsx scripts/benchmark-query.ts",
     "verify:incident": "tsx scripts/verify-incident.ts",
+    "reset": "tsx scripts/reset.ts",
+    "setup:pr": "tsx scripts/setup-root-cause-pr.ts",
     "dev": "pnpm --parallel -r --filter \"./apps/*\" run dev"
   },
   "dependencies": {
