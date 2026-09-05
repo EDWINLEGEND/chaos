@@ -37,3 +37,14 @@ Always ensure that the full verification suite passes locally before committing 
 pnpm typecheck
 pnpm test
 ```
+
+## Any aggregate() or multi-field find() on orders must have a matching compound index; verify with explain() before merge.
+
+**Why:** MongoDB collection scans on unindexed fields caused production latency spikes. Queries on orders without compound indexes performed full COLLSCAN instead of index seeks. Requiring explain() verification before merge prevents regressions.
+
+**Derived from:** INC-001
+**Applies to:** src/services/orders/**
+**Watch for:** aggregate, find, MongoDB, orders, index
+
+- orders-service CPU 31%, memory 46%, 0 restarts, 6/6 replicas ready — all healthy _(azure)_
+- mongodb CPU 31%, memory 46%, 0 restarts, 6/6 replicas ready — all healthy _(azure)_
