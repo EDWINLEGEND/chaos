@@ -333,6 +333,61 @@
         margin-bottom: 0.85rem;
       }
 
+      .metric-row {
+        display: flex;
+        align-items: baseline;
+        gap: 0.55rem;
+        margin-bottom: 0.85rem;
+      }
+
+      .metric-row .widget-metric {
+        margin-bottom: 0;
+      }
+
+      .trend-indicator {
+        display: none;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.74rem;
+        font-weight: 700;
+        font-family: var(--font-sans);
+        padding: 0.15rem 0.5rem;
+        border-radius: 9999px;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .trend-indicator.visible {
+        display: inline-flex;
+      }
+
+      .trend-indicator.up {
+        background: rgba(16, 185, 129, 0.22);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+        animation: pop-trend-up 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .trend-indicator.down {
+        background: rgba(244, 63, 94, 0.22);
+        color: #fb7185;
+        border: 1px solid rgba(244, 63, 94, 0.4);
+        box-shadow: 0 0 10px rgba(244, 63, 94, 0.25);
+        animation: pop-trend-down 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes pop-trend-up {
+        0% { transform: translateY(4px) scale(0.85); opacity: 0; }
+        50% { transform: translateY(-2px) scale(1.08); }
+        100% { transform: translateY(0) scale(1); opacity: 1; }
+      }
+
+      @keyframes pop-trend-down {
+        0% { transform: translateY(-4px) scale(0.85); opacity: 0; }
+        50% { transform: translateY(2px) scale(1.08); }
+        100% { transform: translateY(0) scale(1); opacity: 1; }
+      }
+
       /* Checkmark Circle Icon (Matching 'Wake up at 7 a.m.' reference) */
       .widget-check-circle {
         width: 32px;
@@ -870,7 +925,10 @@
             </div>
             <div>
               <div class="widget-label">acme.orders</div>
-              <div class="widget-metric" id="orders-count">500,000</div>
+              <div class="metric-row">
+                <div class="widget-metric" id="orders-count">500,000</div>
+                <span class="trend-indicator" id="orders-trend"></span>
+              </div>
             </div>
             <div class="track-pill-ticks">
               <div class="progress-pill pill-emerald" style="width: 75%;"></div>
@@ -896,7 +954,10 @@
             </div>
             <div>
               <div class="widget-label">webhook_events</div>
-              <div class="widget-metric" id="webhook-count">0</div>
+              <div class="metric-row">
+                <div class="widget-metric" id="webhook-count">0</div>
+                <span class="trend-indicator" id="webhooks-trend"></span>
+              </div>
             </div>
             <div class="segmented-blocks" id="seg-webhooks-track">
               <div class="seg-block"></div><div class="seg-block"></div><div class="seg-block"></div><div class="seg-block"></div>
@@ -945,7 +1006,10 @@
             </div>
             <div>
               <div class="widget-label">Interceptors</div>
-              <div class="widget-metric" id="active-count">0</div>
+              <div class="metric-row">
+                <div class="widget-metric" id="active-count">0</div>
+                <span class="trend-indicator" id="active-trend"></span>
+              </div>
             </div>
             <div class="track-pill-ticks">
               <div class="progress-pill pill-purple" id="pill-injections-bar" style="width: 20%;"></div>
@@ -1500,6 +1564,40 @@
         }
       }
 
+      let prevTelemetry = {
+        ordersCount: null,
+        webhookEventsCount: null,
+        activeExperiments: null,
+      };
+
+      function updateTrend(indicatorId, current, previous) {
+        const el = document.getElementById(indicatorId);
+        if (!el) return;
+        if (previous === null || current === previous) {
+          return;
+        }
+
+        const diff = current - previous;
+        const isUp = diff > 0;
+        const sign = isUp ? '+' : '';
+        const arrowSvg = isUp
+          ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`
+          : `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`;
+
+        el.className = `trend-indicator visible ${isUp ? 'up' : 'down'}`;
+        el.innerHTML = `${arrowSvg}<span>${sign}${Number(diff).toLocaleString()}</span>`;
+
+        // Highlight the metric text briefly
+        const metricParent = el.previousElementSibling;
+        if (metricParent) {
+          metricParent.style.transition = 'color 0.25s ease';
+          metricParent.style.color = isUp ? 'var(--accent-emerald)' : 'var(--accent-ruby)';
+          setTimeout(() => {
+            metricParent.style.color = '#ffffff';
+          }, 1500);
+        }
+      }
+
       async function fetchTelemetry() {
         try {
           const res = await fetch('/api/environment');
@@ -1517,13 +1615,26 @@
           setDot('dot-payment', data.paymentProvider);
           setDot('dot-mongo', data.mongodb);
 
+          // Numbers and Dynamic Trend Arrows
+          const ordersNum = Number(data.ordersCount);
+          const webhooksNum = Number(data.webhookEventsCount);
+          const activeNum = Number(data.activeExperiments);
+
+          updateTrend('orders-trend', ordersNum, prevTelemetry.ordersCount);
+          updateTrend('webhooks-trend', webhooksNum, prevTelemetry.webhookEventsCount);
+          updateTrend('active-trend', activeNum, prevTelemetry.activeExperiments);
+
+          prevTelemetry.ordersCount = ordersNum;
+          prevTelemetry.webhookEventsCount = webhooksNum;
+          prevTelemetry.activeExperiments = activeNum;
+
           // Orders count
           const ordersEl = document.getElementById('orders-count');
-          if (ordersEl) ordersEl.textContent = Number(data.ordersCount).toLocaleString();
+          if (ordersEl) ordersEl.textContent = ordersNum.toLocaleString();
 
           // Webhooks count
           const webhookEl = document.getElementById('webhook-count');
-          if (webhookEl) webhookEl.textContent = Number(data.webhookEventsCount).toLocaleString();
+          if (webhookEl) webhookEl.textContent = webhooksNum.toLocaleString();
 
           // Segmented blocks animation for webhooks
           const segTrack = document.getElementById('seg-webhooks-track');
@@ -1554,9 +1665,9 @@
           const activeEl = document.getElementById('active-count');
           const activeSub = document.getElementById('active-injections-sub');
           const pillBar = document.getElementById('pill-injections-bar');
-          if (activeEl) activeEl.textContent = data.activeExperiments;
-          if (activeSub) activeSub.textContent = `${data.activeExperiments} Active`;
-          if (pillBar) pillBar.style.width = `${Math.min(data.activeExperiments * 20, 100)}%`;
+          if (activeEl) activeEl.textContent = activeNum;
+          if (activeSub) activeSub.textContent = `${activeNum} Active`;
+          if (pillBar) pillBar.style.width = `${Math.min(activeNum * 20, 100)}%`;
 
           // Diagnostics view sync
           const diagWebhooks = document.getElementById('diag-webhooks');
