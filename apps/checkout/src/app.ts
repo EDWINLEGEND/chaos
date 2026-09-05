@@ -6,6 +6,7 @@ import {
   handleGetOrderById,
   handleListOrders,
 } from './handlers/order-handler.js';
+import { handlePaymentConfirmedWebhook } from './handlers/webhook-handler.js';
 import { sendError } from './utils/http.js';
 
 export function createApp(config: CheckoutConfig, startTime: number) {
@@ -38,10 +39,17 @@ export function createApp(config: CheckoutConfig, startTime: number) {
               'POST /orders',
               'GET /orders',
               'GET /orders/:id',
+              'POST /webhooks/payment-confirmed',
             ],
           })
         );
       }
+      return;
+    }
+
+    // POST /webhooks/payment-confirmed
+    if (method === 'POST' && pathname === '/webhooks/payment-confirmed') {
+      await handlePaymentConfirmedWebhook(req, res);
       return;
     }
 

@@ -187,6 +187,60 @@ Errors:
 
 ---
 
+## Webhook API Reference
+
+> [!IMPORTANT]
+> **Baseline Implementation**: The webhook handler currently operates normally. Inbound events are persisted to `webhook_events`, unindexed duplicate checks execute against `orders`, and errors propagate visibly as `HTTP 500`. The deliberate timeout and silent error-swallowing behavior is reserved for subsequent phases.
+
+### Payment Confirmed Webhook
+**`POST /webhooks/payment-confirmed`**
+
+Simulates an asynchronous notification from an external payment gateway indicating payment success.
+
+#### Request
+```bash
+curl -X POST http://localhost:3001/webhooks/payment-confirmed \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "evt_stripe_1001",
+    "type": "payment-confirmed",
+    "paymentId": "pay_stripe_2002",
+    "userId": "user_demo_123",
+    "amount": 4999
+  }'
+```
+
+#### Successful Order Creation (`HTTP 200 OK`)
+When no pending order exists for `userId`:
+```json
+{
+  "success": true,
+  "data": {
+    "eventId": "evt_stripe_1001",
+    "orderId": "6a9be6f707ea45570ead4c84",
+    "created": true,
+    "duplicate": false
+  }
+}
+```
+
+#### Duplicate Delivery Handling (`HTTP 200 OK`)
+When a pending order already exists for `userId`:
+```json
+{
+  "success": true,
+  "data": {
+    "eventId": "evt_stripe_1002",
+    "orderId": "6a9be6f707ea45570ead4c84",
+    "created": false,
+    "duplicate": true
+  }
+}
+```
+* Note: The duplicate event is still durably recorded in `webhook_events` for reconciliation probes, but no second order is created in `orders`.
+
+---
+
 ## Future Components (Upcoming Phases)
 
 1. **Deliberate Webhook Incident**: Webhook handler with unindexed duplicate-order query triggering COLLSCAN and timeouts.

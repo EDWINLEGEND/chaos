@@ -47,6 +47,28 @@ export interface WebhookEventDocument {
 }
 
 /**
+ * Payload accepted by POST /webhooks/payment-confirmed
+ */
+export interface PaymentConfirmedWebhookPayload {
+  id?: string;
+  eventId?: string;
+  type: 'payment-confirmed';
+  paymentId: string;
+  userId: string;
+  amount: number;
+}
+
+/**
+ * Result returned after processing a payment-confirmed webhook event.
+ */
+export interface WebhookProcessResult {
+  eventId: string;
+  orderId: string;
+  created: boolean;
+  duplicate: boolean;
+}
+
+/**
  * Status of a payment transaction from the payment provider.
  */
 export type PaymentStatus =
