@@ -59,8 +59,20 @@
         background-color: var(--bg-canvas);
         color: var(--text-primary);
         min-height: 100vh;
+        line-height: 1.55;
         -webkit-font-smoothing: antialiased;
         padding: 1.75rem 2rem 5rem 2rem;
+      }
+
+      h1, h2, h3, h4 {
+        color: #ffffff;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
+      }
+
+      p {
+        line-height: 1.6;
+        color: var(--text-secondary);
       }
 
       @media (max-width: 768px) {
@@ -74,7 +86,7 @@
         margin: 0 auto;
         display: flex;
         flex-direction: column;
-        gap: 1.75rem;
+        gap: 2rem;
       }
 
       /* ==========================================================================
@@ -198,17 +210,57 @@
       .btn-pill-danger {
         background: linear-gradient(180deg, #ff385c 0%, #e11d48 100%);
         color: #ffffff;
-        font-weight: 600;
+        font-weight: 700;
         border: 1px solid #ff4d6d;
-        box-shadow: 0 2px 10px rgba(225, 29, 72, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        box-shadow: 0 2px 12px rgba(225, 29, 72, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
         letter-spacing: -0.01em;
       }
 
       .btn-pill-danger:hover:not(:disabled) {
         background: linear-gradient(180deg, #ff4d6d 0%, #be123c 100%);
         border-color: #ff758f;
-        box-shadow: 0 4px 16px rgba(225, 29, 72, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        box-shadow: 0 4px 18px rgba(225, 29, 72, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.45);
         transform: translateY(-1px);
+      }
+
+      /* Emergency Stop Fault Button - Super High Contrast & Visibility */
+      .btn-stop-fault {
+        background: #ffffff !important;
+        color: #be123c !important;
+        border: 2px solid #ffffff !important;
+        font-family: var(--font-sans);
+        font-weight: 800 !important;
+        font-size: 0.82rem !important;
+        letter-spacing: 0.02em !important;
+        padding: 0.52rem 1.35rem !important;
+        border-radius: 9999px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.55rem !important;
+        cursor: pointer !important;
+        box-shadow: 0 0 22px rgba(255, 255, 255, 0.75), 0 4px 16px rgba(0, 0, 0, 0.8) !important;
+        animation: stop-btn-pulse 1.8s infinite ease-in-out;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      }
+
+      .btn-stop-fault:hover:not(:disabled) {
+        background: #ffe4e6 !important;
+        border-color: #ffffff !important;
+        transform: translateY(-1px) scale(1.04) !important;
+        box-shadow: 0 0 32px rgba(255, 255, 255, 0.95), 0 0 42px rgba(244, 63, 94, 0.7), 0 6px 22px rgba(0, 0, 0, 0.9) !important;
+      }
+
+      .btn-stop-fault:active:not(:disabled) {
+        transform: translateY(0) scale(0.98) !important;
+      }
+
+      @keyframes stop-btn-pulse {
+        0%, 100% {
+          box-shadow: 0 0 16px rgba(255, 255, 255, 0.65), 0 4px 14px rgba(0, 0, 0, 0.8);
+        }
+        50% {
+          box-shadow: 0 0 28px rgba(255, 255, 255, 0.95), 0 0 38px rgba(244, 63, 94, 0.65), 0 6px 18px rgba(0, 0, 0, 0.9);
+        }
       }
 
       .btn-pill:disabled {
@@ -223,7 +275,7 @@
         border-radius: 26px;
         border: 1px solid var(--border-widget);
         box-shadow: var(--inner-highlight), 0 12px 32px rgba(0, 0, 0, 0.6);
-        padding: 1.4rem 1.45rem;
+        padding: 1.5rem 1.55rem;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -247,23 +299,56 @@
       .widget-purple  { background: var(--grad-purple); }
       .widget-neutral { background: var(--grad-neutral); }
 
-      /* Dynamic Breaking / Processing Scenario State */
+      /* Dynamic Breaking / Processing Scenario State (High Contrast & Visibility) */
       .widget.breaking {
-        background: var(--grad-breaking) !important;
-        border-color: rgba(244, 63, 94, 0.7) !important;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 32px rgba(244, 63, 94, 0.45) !important;
+        background: radial-gradient(135% 85% at 50% 115%, #881337 0%, #4c0519 45%, #1f020a 80%, #0a0003 100%) !important;
+        border: 1.5px solid #ff4d6d !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 36px rgba(244, 63, 94, 0.55), 0 8px 32px rgba(0, 0, 0, 0.8) !important;
         animation: pulse-breaking 2s infinite ease-in-out;
       }
 
       @keyframes pulse-breaking {
         0%, 100% {
-          border-color: rgba(244, 63, 94, 0.7);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 28px rgba(244, 63, 94, 0.4);
+          border-color: #ff4d6d;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 30px rgba(244, 63, 94, 0.45);
         }
         50% {
-          border-color: rgba(244, 63, 94, 1);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 45px rgba(244, 63, 94, 0.65);
+          border-color: #ff758f;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 50px rgba(244, 63, 94, 0.75);
         }
+      }
+
+      .widget.breaking .widget-title-group span {
+        color: #ffffff !important;
+        font-weight: 700;
+      }
+
+      .widget.breaking .scenario-desc {
+        color: rgba(255, 255, 255, 0.92) !important;
+      }
+
+      .widget.breaking .widget-badge.alert {
+        background: #ff1e4b !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        box-shadow: 0 0 14px rgba(255, 30, 75, 0.85) !important;
+        letter-spacing: 0.04em !important;
+        animation: badge-beacon 1.2s infinite ease-in-out;
+      }
+
+      @keyframes badge-beacon {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+
+      /* Scenario Description Typography & Spacing */
+      .scenario-desc {
+        font-size: 0.83rem;
+        color: var(--text-secondary);
+        line-height: 1.55;
+        letter-spacing: 0.005em;
+        margin-bottom: 0.95rem;
       }
 
       /* Widget Top Header */
@@ -271,30 +356,32 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.65rem;
+        margin-bottom: 0.85rem;
       }
 
       .widget-title-group {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.6rem;
         color: #ffffff;
         font-size: 0.95rem;
         font-weight: 600;
+        letter-spacing: -0.01em;
       }
 
       /* Streak & Target Badges (Matching Reference Images) */
       .widget-badge {
         display: flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: 0.35rem;
         font-size: 0.76rem;
         font-family: var(--font-sans);
         background: rgba(255, 255, 255, 0.1);
-        padding: 0.2rem 0.6rem;
+        padding: 0.22rem 0.65rem;
         border-radius: 9999px;
-        color: rgba(255, 255, 255, 0.85);
+        color: rgba(255, 255, 255, 0.88);
         font-weight: 500;
+        letter-spacing: 0.01em;
       }
 
       .widget-badge.streak {
@@ -314,14 +401,15 @@
         font-weight: 600;
       }
 
-      /* Widget Center Metrics */
+      /* Widget Center Metrics with Spacious Rhythm */
       .widget-label {
         font-size: 0.72rem;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.07em;
         color: var(--text-muted);
-        font-weight: 500;
-        margin-bottom: 0.15rem;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+        line-height: 1.25;
       }
 
       .widget-metric {
@@ -329,15 +417,15 @@
         font-weight: 800;
         letter-spacing: -0.03em;
         color: #ffffff;
-        line-height: 1.1;
-        margin-bottom: 0.85rem;
+        line-height: 1.15;
+        margin-bottom: 0.95rem;
       }
 
       .metric-row {
         display: flex;
         align-items: baseline;
-        gap: 0.55rem;
-        margin-bottom: 0.85rem;
+        gap: 0.65rem;
+        margin-bottom: 0.95rem;
       }
 
       .metric-row .widget-metric {
@@ -480,20 +568,23 @@
       /* Breaking Live Shimmer Line */
       .breaking-shimmer-bar {
         width: 100%;
-        height: 6px;
-        background: rgba(244, 63, 94, 0.2);
+        height: 8px;
+        background: rgba(0, 0, 0, 0.55);
+        border: 1px solid rgba(255, 77, 109, 0.4);
         border-radius: 9999px;
         overflow: hidden;
         position: relative;
         margin-top: auto;
+        margin-bottom: 0.95rem;
+        box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.8), 0 0 12px rgba(244, 63, 94, 0.3);
       }
 
       .breaking-shimmer-fill {
         position: absolute;
         inset: 0;
-        background: linear-gradient(90deg, transparent, var(--accent-ruby), #ffffff, var(--accent-ruby), transparent);
+        background: linear-gradient(90deg, transparent, #ff1e4b, #ffffff, #ff1e4b, transparent);
         background-size: 200% 100%;
-        animation: shimmer 1.5s infinite linear;
+        animation: shimmer 1.2s infinite linear;
       }
 
       @keyframes shimmer {
@@ -501,23 +592,23 @@
         100% { background-position: -200% 0; }
       }
 
-      /* Grids */
+      /* Grids with Comfortable Layout Spacing */
       .widget-grid-4 {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 1.25rem;
+        gap: 1.35rem;
       }
 
       .widget-grid-3 {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 1.25rem;
+        gap: 1.35rem;
       }
 
       .widget-grid-2 {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 1.25rem;
+        gap: 1.35rem;
       }
 
       @media (max-width: 1100px) {
@@ -533,14 +624,20 @@
       /* Hero Spotlight Widget */
       .hero-widget {
         border-radius: 28px;
-        padding: 1.85rem 2rem;
+        padding: 2rem 2.25rem;
         background: var(--grad-ruby);
         border: 1px solid rgba(244, 63, 94, 0.25);
         box-shadow: var(--inner-highlight), 0 12px 32px rgba(244, 63, 94, 0.15);
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
+        gap: 1.5rem;
         transition: all 0.3s ease;
+      }
+
+      .hero-widget.breaking {
+        border-color: #ff4d6d !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 45px rgba(244, 63, 94, 0.6) !important;
+        animation: pulse-breaking 2s infinite ease-in-out;
       }
 
       .hero-top {
@@ -548,31 +645,33 @@
         justify-content: space-between;
         align-items: flex-start;
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: 1.25rem;
       }
 
       .hero-title {
-        font-size: 1.45rem;
+        font-size: 1.5rem;
         font-weight: 800;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.025em;
+        line-height: 1.25;
         color: #ffffff;
       }
 
       .hero-desc {
         font-size: 0.88rem;
-        color: var(--text-secondary);
-        max-width: 780px;
-        margin-top: 0.35rem;
-        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.75);
+        max-width: 800px;
+        margin-top: 0.55rem;
+        line-height: 1.6;
+        letter-spacing: -0.005em;
       }
 
       /* Pipeline track visualizer */
       .pipeline-track {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: 0.75rem;
         background: rgba(0, 0, 0, 0.45);
-        padding: 0.85rem 1.15rem;
+        padding: 0.95rem 1.25rem;
         border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, 0.08);
         overflow-x: auto;
@@ -583,18 +682,21 @@
       .pipeline-node {
         display: flex;
         align-items: center;
-        gap: 0.35rem;
+        gap: 0.45rem;
         color: var(--text-secondary);
         white-space: nowrap;
-        padding: 0.2rem 0.5rem;
+        padding: 0.32rem 0.65rem;
         border-radius: 8px;
+        line-height: 1.35;
         transition: all 0.3s ease;
       }
 
       .pipeline-node.active-step {
-        background: rgba(244, 63, 94, 0.25);
+        background: linear-gradient(135deg, rgba(244, 63, 94, 0.45) 0%, rgba(225, 29, 72, 0.65) 100%);
         color: #ffffff;
-        box-shadow: 0 0 12px rgba(244, 63, 94, 0.4);
+        font-weight: 700;
+        border: 1px solid #ff4d6d;
+        box-shadow: 0 0 16px rgba(244, 63, 94, 0.6);
       }
 
       .pipeline-node.alert { color: #fb7185; font-weight: 600; }
@@ -1050,12 +1152,12 @@
           </div>
 
           <!-- Dynamic Live Breaking Banner (Shows when executing) -->
-          <div id="hero-breaking-banner" style="display: none; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.5); padding: 0.6rem 1rem; border-radius: 12px; font-size: 0.78rem; font-family: var(--font-mono); color: #fb7185; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span class="status-pulse-dot status-ruby" style="animation: pulse-alert 0.8s infinite;"></span>
-              <span id="hero-breaking-text">Simulating 1,200 Concurrent Webhooks with COLLSCAN Saturation...</span>
+          <div id="hero-breaking-banner" style="display: none; background: rgba(244, 63, 94, 0.35); border: 1.5px solid #ff4d6d; padding: 0.75rem 1.25rem; border-radius: 14px; font-size: 0.82rem; font-family: var(--font-mono); color: #ffffff; align-items: center; justify-content: space-between; box-shadow: 0 0 24px rgba(244, 63, 94, 0.45);">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <span class="status-pulse-dot status-ruby" style="width: 10px; height: 10px; animation: pulse-alert 0.8s infinite;"></span>
+              <span id="hero-breaking-text" style="font-weight: 600; letter-spacing: 0.02em;">Simulating 1,200 Concurrent Webhooks with COLLSCAN Saturation...</span>
             </div>
-            <span id="hero-breaking-timer" style="color: #ffffff; font-weight: 600;">--s</span>
+            <span id="hero-breaking-timer" style="background: #ffffff; color: #e11d48; font-weight: 800; font-size: 0.82rem; padding: 0.22rem 0.75rem; border-radius: 9999px; box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);">--s</span>
           </div>
 
           <!-- 5-Stage Architecture Pipeline Representation -->
@@ -1075,43 +1177,43 @@
         <!-- Service Cluster Nodes Row -->
         <section class="widget-grid-3">
           <!-- Node 1: Checkout -->
-          <div class="widget widget-neutral" style="padding: 1.15rem 1.25rem;">
-            <div class="widget-top" style="margin-bottom: 0.35rem;">
-              <span class="widget-title-group" style="font-size: 0.85rem;">
+          <div class="widget widget-neutral" style="padding: 1.25rem 1.35rem;">
+            <div class="widget-top" style="margin-bottom: 0.45rem;">
+              <span class="widget-title-group" style="font-size: 0.88rem;">
                 <span class="status-pulse-dot" id="dot-checkout"></span>
                 <span>acme-checkout</span>
               </span>
               <span class="widget-badge">Port 3001</span>
             </div>
-            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.25rem;">
+            <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.55; margin-top: 0.45rem;">
               Order domain & silent failure handler
             </div>
           </div>
 
           <!-- Node 2: Payment Provider -->
-          <div class="widget widget-neutral" style="padding: 1.15rem 1.25rem;">
-            <div class="widget-top" style="margin-bottom: 0.35rem;">
-              <span class="widget-title-group" style="font-size: 0.85rem;">
+          <div class="widget widget-neutral" style="padding: 1.25rem 1.35rem;">
+            <div class="widget-top" style="margin-bottom: 0.45rem;">
+              <span class="widget-title-group" style="font-size: 0.88rem;">
                 <span class="status-pulse-dot" id="dot-payment"></span>
                 <span>fake-payment-provider</span>
               </span>
               <span class="widget-badge">Port 3002</span>
             </div>
-            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.25rem;">
+            <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.55; margin-top: 0.45rem;">
               External gateway mock & webhook dispatcher
             </div>
           </div>
 
           <!-- Node 3: MongoDB 7 -->
-          <div class="widget widget-neutral" style="padding: 1.15rem 1.25rem;">
-            <div class="widget-top" style="margin-bottom: 0.35rem;">
-              <span class="widget-title-group" style="font-size: 0.85rem;">
+          <div class="widget widget-neutral" style="padding: 1.25rem 1.35rem;">
+            <div class="widget-top" style="margin-bottom: 0.45rem;">
+              <span class="widget-title-group" style="font-size: 0.88rem;">
                 <span class="status-pulse-dot" id="dot-mongo"></span>
                 <span>MongoDB 7</span>
               </span>
               <span class="widget-badge">Port 27017</span>
             </div>
-            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.25rem;">
+            <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.55; margin-top: 0.45rem;">
               Database <code>acme</code> · 500,000 document baseline
             </div>
           </div>
@@ -1122,10 +1224,10 @@
            PAGE 2: SCENARIOS (Dynamic Status & Color Changing Widgets)
            ==================================================================== -->
       <main class="tab-view" id="view-scenarios">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
           <div>
-            <h2 style="font-size: 1.3rem; font-weight: 800; color: #ffffff;">Predefined Chaos Scenarios</h2>
-            <p style="font-size: 0.82rem; color: var(--text-secondary);">Execute deterministic failure modes across targeted microservices.</p>
+            <h2 style="font-size: 1.35rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; margin-bottom: 0.35rem;">Predefined Chaos Scenarios</h2>
+            <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.55;">Execute deterministic failure modes across targeted microservices.</p>
           </div>
         </div>
 
@@ -1831,38 +1933,38 @@
                 : 'widget-emerald';
 
               return `
-              <div class="widget ${themeClass}" style="min-height: 210px;">
+              <div class="widget ${themeClass}" style="min-height: 220px;">
                 <div class="widget-top">
                   <div class="widget-title-group">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${isRunning ? '#f43f5e' : 'currentColor'}" stroke-width="2.5">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="${isRunning ? '#ff1e4b' : 'none'}" stroke="${isRunning ? '#ff4d6d' : 'currentColor'}" stroke-width="2.5">
                       <polygon points="5 3 19 12 5 21 5 3"/>
                     </svg>
                     <span>${sName}</span>
                   </div>
                   <span class="widget-badge ${isRunning ? 'alert' : ''}">${isRunning ? '🔥 BREAKING' : sTarget}</span>
                 </div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 0.85rem;">
+                <div class="scenario-desc">
                   ${sDesc}
                 </div>
 
                 ${
                   isRunning
-                    ? '<div class="breaking-shimmer-bar" style="margin-bottom: 0.85rem;"><div class="breaking-shimmer-fill"></div></div>'
+                    ? '<div class="breaking-shimmer-bar"><div class="breaking-shimmer-fill"></div></div>'
                     : ''
                 }
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
-                  <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-muted);">
-                    ${isRunning ? '<span class="status-pulse-dot status-ruby"></span> Fault Active' : '● Ready / Idle'}
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.5rem;">
+                  <span style="font-size: 0.74rem; font-family: var(--font-mono); color: var(--text-muted);">
+                    ${isRunning ? '<span class="status-pulse-dot status-ruby" style="width: 9px; height: 9px; animation: pulse-alert 0.8s infinite;"></span> <strong style="color: #ff4d6d; letter-spacing: 0.05em;">FAULT ACTIVE</strong>' : '● Ready / Idle'}
                   </span>
                   <button
-                    class="btn-pill ${isRunning ? 'btn-pill-danger' : 'btn-pill-primary'}"
-                    style="padding: 0.42rem 1.05rem; font-size: 0.78rem;"
+                    class="${isRunning ? 'btn-stop-fault' : 'btn-pill btn-pill-primary'}"
+                    style="${isRunning ? '' : 'padding: 0.45rem 1.1rem; font-size: 0.78rem;'}"
                     onclick="${isRunning ? `stopScenario('${sId}')` : `startScenario('${sId}')`}"
                   >
                     ${
                       isRunning
-                        ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="3"/></svg><span>Stop Fault</span>`
+                        ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="4"/></svg><span>Stop Fault</span>`
                         : `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg><span>Run Scenario</span>`
                     }
                   </button>
@@ -1910,9 +2012,9 @@
                     <td>${escapeHtml(e.target)}</td>
                     <td><span style="color: var(--accent-amber); font-weight: 600;">ACTIVE</span></td>
                     <td>
-                      <button class="btn-pill btn-pill-danger" style="padding: 0.28rem 0.75rem; font-size: 0.72rem; gap: 0.35rem;" onclick="stopExperiment('${escapeHtml(e.id)}')">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
-                        <span>Stop</span>
+                      <button class="btn-stop-fault" style="padding: 0.32rem 0.95rem; font-size: 0.72rem; gap: 0.4rem;" onclick="stopExperiment('${escapeHtml(e.id)}')">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+                        <span>Stop Fault</span>
                       </button>
                     </td>
                   </tr>
