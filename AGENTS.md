@@ -37,3 +37,16 @@ Always ensure that the full verification suite passes locally before committing 
 pnpm typecheck
 pnpm test
 ```
+
+## Any DB query on orders filtering on fields beyond _id must have a matching compound index; verify with explain() before merge. Webhook catch blocks must return non-2xx on failure so upstream providers retry delivery.
+
+**Why:** The payment-confirmed webhook lost orders silently because the duplicate-order lookup {userId, status} had no index (COLLSCAN over 500k docs) and the catch block returned HTTP 200 on timeout, preventing payment provider retries.
+
+**Derived from:** INC-001
+**Applies to:** apps/checkout/src/services/webhook-service.ts, apps/checkout/src/handlers/webhook-handler.ts, scripts/seed.ts
+**Watch for:** orders.find, orders.findOne, webhook.*catch, WEBHOOK_TIMEOUT
+
+- The webhook-service catch block silently swallows timeout/query errors and returns HTTP 200 {received: true}, preventing the payment provider from retrying. The order is never created, causing silent divergence between payment events and orders. _(github)_
+- The duplicate-order query {userId, status: "pending"} has no compound index on the orders collection (only _id_), causing a COLLSCAN over 500k documents that degrades under concurrent webhook traffic and exceeds WEBHOOK_TIMEOUT_MS. _(github)_
+- Add compound index {userId:1, status:1} on the orders collection (in seed.ts and as a migration) to eliminate the COLLSCAN on the duplicate-order lookup query. _(github)_
+- Change the catch block in webhook-service.ts to return HTTP 500 with an error response instead of HTTP 200, so the payment provider retries delivery on failure. _(github)_
