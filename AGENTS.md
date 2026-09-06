@@ -37,3 +37,14 @@ Always ensure that the full verification suite passes locally before committing 
 pnpm typecheck
 pnpm test
 ```
+
+## Any MongoDB query on orders used for duplicate checking or filtering must have a matching compound index. Before merging, run explain() on the query shape and verify the plan is IXSCAN, not COLLSCAN.
+
+**Why:** The payment-confirmed webhook performed {userId, status} lookups on 500k orders without an index, causing COLLSCAN timeouts under concurrent load. The catch block silently swallowed these errors and returned HTTP 200, creating silent data divergence between webhook_events and orders. A compound index eliminates the root cause; this rule prevents regression.
+
+**Derived from:** INC-001
+**Applies to:** apps/checkout/src/services/webhook-service.ts, apps/checkout/src/handlers/webhook-handler.ts, scripts/seed.ts
+**Watch for:** aggregate, find, findOne, updateOne
+
+- No compound index on orders{userId,status} — COLLSCAN over 500k docs. Under 50 concurrent workers, latency exceeds WEBHOOK_TIMEOUT_MS causing ~850 silent failures out of 1200 webhooks. _(github)_
+- Webhook handler catch block returns HTTP 200 {received:true} without logging errors or queueing order for retry, causing silent divergence: webhook_events=1200 but orders=~310-350. _(github)_
