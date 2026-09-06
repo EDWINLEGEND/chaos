@@ -1,75 +1,80 @@
+import { getDb } from '@chaos/shared';
+import { randomUUID } from 'node:crypto';
 import { ObjectId } from 'mongodb';
-import {
-  getWebhookEventsCollection,
-  getOrdersCollection,
-  type WebhookEventDocument,
-  type OrderDocument,
-  type WebhookProcessResult,
-} from '@chaos/shared';
-import { createOrder } from './order-service.js';
-import { withTimeout } from '../utils/async.js';
 
 export interface ValidatedWebhookInput {
   eventId: string;
+  type: string;
   paymentId: string;
   userId: string;
   amount: number;
 }
 
-export type WebhookExecutionResult = WebhookProcessResult | { received: true };
+export interface WebhookProcessingResult {
+  eventId: string;
+  orderId: string | null;
+  created: boolean;
+  duplicate: boolean;
+}
+
+const WEBHOOK_TIMEOUT_MS = Number(process.env['WEBHOOK_TIMEOUT_MS'] || '2000');
 
 /**
- * Persists an incoming payment-confirmed event into the `webhook_events` collection.
- * Executed prior to duplicate checks to maintain durable audit records for reconciliation.
+ * Ensure the compound index exists on the orders collection.
+ * Called lazily on first webhook invocation to guarantee the index is
+ * present even if `pnpm seed` was skipped or the collection was dropped.
  */
-export async function persistWebhookEvent(input: ValidatedWebhookInput): Promise<WebhookEventDocument> {
-  const collection = getWebhookEventsCollection();
+let indexEnsured = false;
 
-  const eventDocument: WebhookEventDocument = {
+async function ensureCompoundIndex(): Promise<void> {
+  if (indexEnsured) return;
+  try {
+    const db = getDb();
+    await db.collection('orders').createIndex(
+      { userId: 1, status: 1 },
+      { background: true }
+    );
+    indexEnsured = true;
+  } catch {
+    // Non-fatal: the index may already exist or be created by the seed script.
+  }
+}
+
+export async function processPaymentConfirmedWebhook(
+  input: ValidatedWebhookInput
+): Promise<WebhookProcessingResult> {
+  const db = getDb();
+
+  // Ensure compound index exists (idempotent, no-op after first call)
+  await ensureCompoundIndex();
+
+  // 1. Persist the inbound webhook event to webhook_events
+  const webhookEvent = {
     _id: new ObjectId(),
     eventId: input.eventId,
+    type: input.type,
     paymentId: input.paymentId,
     userId: input.userId,
-    type: 'payment-confirmed',
+    amount: input.amount,
     createdAt: new Date(),
   };
 
-  const result = await collection.insertOne(eventDocument);
-  if (!result.acknowledged) {
-    throw new Error('Database insertion of webhook_event was not acknowledged by MongoDB');
-  }
+  await db.collection('webhook_events').insertOne(webhookEvent);
 
-  return eventDocument;
-}
+  // 2. Duplicate-order lookup with timeout
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`Duplicate-order lookup exceeded ${WEBHOOK_TIMEOUT_MS}ms timeout`));
+    }, WEBHOOK_TIMEOUT_MS);
+  });
 
-/**
- * Queries for an existing pending order for the given user.
- * Performs lookup using query shape { userId, status: "pending" }.
- */
-export async function findPendingOrderByUser(
-  userId: string,
-  options?: { maxTimeMS?: number }
-): Promise<OrderDocument | null> {
-  const collection = getOrdersCollection();
-  return collection.findOne(
-    {
-      userId,
-      status: 'pending',
-    },
-    options?.maxTimeMS ? { maxTimeMS: options.maxTimeMS } : undefined
-  );
-}
-
-export async function lookupAndCreateOrder(
-  input: ValidatedWebhookInput,
-  timeoutMs?: number
-): Promise<WebhookProcessResult> {
-  const existingOrder = await webhookService.findPendingOrderByUser(
-    input.userId,
-    timeoutMs ? { maxTimeMS: timeoutMs } : undefined
-  );
+  const existingOrder = await Promise.race([
+    db.collection('orders').findOne({ userId: input.userId, status: 'pending' }),
+    timeoutPromise,
+  ]);
 
   if (existingOrder) {
+    // Duplicate: an order for this user is already pending
     return {
       eventId: input.eventId,
       orderId: existingOrder._id.toString(),
@@ -78,75 +83,23 @@ export async function lookupAndCreateOrder(
     };
   }
 
-  const newOrder = await createOrder({
+  // 3. Create the new order
+  const order = {
+    _id: new ObjectId(),
     userId: input.userId,
     paymentId: input.paymentId,
+    eventId: input.eventId,
     amount: input.amount,
-    status: 'pending',
-  });
+    status: 'pending' as const,
+    createdAt: new Date(),
+  };
+
+  await db.collection('orders').insertOne(order);
 
   return {
     eventId: input.eventId,
-    orderId: newOrder._id.toString(),
+    orderId: order._id.toString(),
     created: true,
     duplicate: false,
   };
 }
-
-/**
- * Processes a validated payment-confirmed webhook.
- * Bounded by timeoutMs on the unindexed duplicate-order lookup query.
- * If the duplicate lookup times out or encounters a database error:
- * the failure is caught, swallowed without logging, and an acknowledgment { received: true } is returned.
- * Order creation is strictly unreachable when a timeout occurs.
- */
-export async function processPaymentConfirmedWebhook(
-  input: ValidatedWebhookInput,
-  timeoutMs: number = 800
-): Promise<WebhookExecutionResult> {
-  await persistWebhookEvent(input);
-
-  try {
-    // 1. Bound duplicate-order query by timeoutMs
-    const existingOrder = await withTimeout(
-      webhookService.findPendingOrderByUser(input.userId, { maxTimeMS: timeoutMs }),
-      timeoutMs
-    );
-
-    // 2. Handle duplicate order if found within timeout
-    if (existingOrder) {
-      return {
-        eventId: input.eventId,
-        orderId: existingOrder._id.toString(),
-        created: false,
-        duplicate: true,
-      };
-    }
-
-    // 3. Lookup succeeded within timeoutMs with no pending order found - create order
-    const newOrder = await createOrder({
-      userId: input.userId,
-      paymentId: input.paymentId,
-      amount: input.amount,
-      status: 'pending',
-    });
-
-    return {
-      eventId: input.eventId,
-      orderId: newOrder._id.toString(),
-      created: true,
-      duplicate: false,
-    };
-  } catch {
-    // Swallowed timeout / database error
-    return { received: true };
-  }
-}
-
-export const webhookService = {
-  persistWebhookEvent,
-  findPendingOrderByUser,
-  lookupAndCreateOrder,
-  processPaymentConfirmedWebhook,
-};
-
