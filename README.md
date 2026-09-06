@@ -5,10 +5,10 @@
 ## Concept
 
 In the OpsRoom demonstration workflow:
-* **Chaos** is the **"patient"** — a real local multi-service environment exhibiting reproducible system states and failure scenarios.
-* **OpsRoom** is the **"doctor"** — the external AI diagnostic platform that monitors, investigates evidence, and diagnoses incidents.
+* **Chaos** is the **"patient"** — a real local microservice system that experiences simulated production failures.
+* **OpsRoom** is the **"doctor"** — an AI-powered incident response platform that observes, diagnoses, and fixes problems in Chaos.
 
----
+This repository provides a realistic, self-contained environment for demonstrating OpsRoom's capabilities.
 
 ## Current Status
 
@@ -17,7 +17,7 @@ In the OpsRoom demonstration workflow:
 
 ---
 
-## High-Level Architecture
+## Repository Structure
 
 The repository is structured as a lightweight TypeScript/pnpm monorepo:
 
@@ -33,11 +33,8 @@ Chaos/
 ├── docker/                   # Docker assets and MongoDB initialization
 ├── docs/                     # Architecture documentation
 ├── docker-compose.yml        # Local orchestration (MongoDB 7)
-├── pnpm-workspace.yaml       # Monorepo workspace configuration
-├── tsconfig.json             # Root TypeScript project references
-├── .env.example              # Environment variable definitions
-├── README.md                 # System overview and guide
-└── AGENTS.md                 # Engineering guidelines & contributor rules
+├── package.json              # Root workspace manifest
+└── pnpm-workspace.yaml       # pnpm workspace definition
 ```
 
 ---
@@ -53,8 +50,9 @@ Chaos/
 ### 1. Clone and Configure
 
 ```bash
-# Copy example environment configuration
-cp .env.example .env
+git clone https://github.com/EDWINLEGEND/chaos.git
+cd chaos
+cp .env.example .env   # edit as needed for your environment
 ```
 
 ### 2. Install Dependencies
@@ -63,19 +61,23 @@ cp .env.example .env
 pnpm install
 ```
 
-### 3. Build & Verify Type Checking
+### 3. Verify Setup
 
 ```bash
-# Build all packages and applications
-pnpm build
-
-# Run strict TypeScript validation across the entire workspace
+# Type-check the full codebase
 pnpm typecheck
+
+# Run the test suites
+pnpm test
 ```
 
-### 4. Run Automated Tests
+### 4. Development Commands
 
 ```bash
+# Type-check all packages
+pnpm typecheck
+
+# Run all tests
 pnpm test
 ```
 
@@ -110,87 +112,48 @@ pnpm dev
 ```
 
 Service endpoints:
-* **Acme Checkout**: `http://localhost:3001` (`http://localhost:3001/health`)
-* **Chaos Web**: `http://localhost:3000`
-* **Payment Provider**: `http://localhost:3002`
-* **MongoDB**: `mongodb://127.0.0.1:27017/acme`
+* **`http://localhost:3001`** — acme-checkout (order management API)
+* **`http://localhost:3002`** — payment-provider (fake gateway)
+* **`http://localhost:3000`** — chaos-web (frontend scaffold)
 
 ---
 
-## Order API Reference
+## API Reference
 
-### Money Representation
-All monetary amounts are represented as positive integers in **minor currency units** (e.g. cents in USD) to prevent floating-point inaccuracy:
-* `4999` = **$49.99**
-* `1000` = **$10.00**
-* `250` = **$2.50**
+### Health Check
+```bash
+curl http://localhost:3001/health
+```
 
-### 1. Create an Order
-**`POST /orders`**
+Returns service health including MongoDB connectivity status.
 
-Request:
+### Create Order
 ```bash
 curl -X POST http://localhost:3001/orders \
   -H "Content-Type: application/json" \
-  -d '{
-    "userId": "user_demo_123",
-    "paymentId": "pay_stripe_456",
-    "amount": 4999
-  }'
-```
-
-Response (`HTTP 201 Created`):
-```json
-{
-  "success": true,
-  "data": {
-    "id": "6a9be590df8ffde72c9ffb9a",
-    "_id": "6a9be590df8ffde72c9ffb9a",
-    "userId": "user_demo_123",
-    "paymentId": "pay_stripe_456",
-    "amount": 4999,
-    "status": "pending",
-    "createdAt": "2026-09-05T09:49:04.345Z",
-    "updatedAt": "2026-09-05T09:49:04.345Z"
-  }
-}
-```
-
-### 2. Retrieve an Order by ID
-**`GET /orders/:id`**
-
-Request:
-```bash
-curl http://localhost:3001/orders/6a9be590df8ffde72c9ffb9a
-```
-
-Response (`HTTP 200 OK`):
-```json
-{
-  "success": true,
-  "data": {
-    "id": "6a9be590df8ffde72c9ffb9a",
-    "_id": "6a9be590df8ffde72c9ffb9a",
-    "userId": "user_demo_123",
-    "paymentId": "pay_stripe_456",
-    "amount": 4999,
-    "status": "pending",
-    "createdAt": "2026-09-05T09:49:04.345Z",
-    "updatedAt": "2026-09-05T09:49:04.345Z"
-  }
-}
+  -d '{"userId": "user_123", "amount": 2999}'
 ```
 
 Errors:
-* Malformed ObjectId: `HTTP 400 Bad Request` (`{"error": {"code": "INVALID_ORDER_ID", ...}}`)
-* Non-existent ID: `HTTP 404 Not Found` (`{"error": {"code": "ORDER_NOT_FOUND", ...}}`)
+* `400` — Missing or invalid fields
+* `500` — Server error
+
+### List Orders
+```bash
+curl http://localhost:3001/orders
+```
+
+### Get Order by ID
+```bash
+curl http://localhost:3001/orders/<orderId>
+```
 
 ---
 
 ## Webhook API Reference
 
 > [!IMPORTANT]
-> **Baseline Implementation**: The webhook handler currently operates normally. Inbound events are persisted to `webhook_events`, unindexed duplicate checks execute against `orders`, and errors propagate visibly as `HTTP 500`. The deliberate timeout and silent error-swallowing behavior is reserved for subsequent phases.
+> **Baseline Implementation**: The webhook handler currently operates normally. Inbound events are persisted to `webhook_events`, duplicate checks execute against `orders` (indexed on `{userId, status}`), and errors propagate as non-2xx responses. The deliberate timeout and silent error-swallowing behavior is reserved for subsequent phases.
 
 ### Payment Confirmed Webhook
 **`POST /webhooks/payment-confirmed`**
@@ -239,19 +202,55 @@ When a pending order already exists for `userId`:
 ```
 * Note: The duplicate event is still durably recorded in `webhook_events` for reconciliation probes, but no second order is created in `orders`.
 
+#### Order Creation Failed (`HTTP 502 Bad Gateway`)
+When the order lookup or creation fails (e.g., database timeout under load):
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ORDER_CREATION_FAILED",
+    "message": "Order creation failed: <details>"
+  }
+}
+```
+* Payment providers should retry on 502 responses.
+
+#### Missing or Invalid Fields (`HTTP 400 Bad Request`)
+```json
+{
+  "success": false,
+  "error": {
+    "code": "MISSING_FIELDS",
+    "message": "Required fields: id, paymentId, userId, amount"
+  }
+}
+```
+
+---
+
+## Database Indexes
+
+The `init-mongo.js` script creates the following indexes on first container start:
+
+| Collection | Index | Purpose |
+|---|---|---|
+| `orders` | `{userId: 1, status: 1}` | Duplicate-order lookup in payment-confirmed webhook |
+| `webhook_events` | `{eventId: 1}` (unique) | Prevent duplicate event processing |
+| `webhook_events` | `{userId: 1}` | Query events by user |
+
 ---
 
 ## Future Components (Upcoming Phases)
 
 1. **Deliberate Webhook Incident**: Webhook handler with unindexed duplicate-order query triggering COLLSCAN and timeouts.
 2. **Payment Gateway Simulator**: Realistic asynchronous webhook dispatcher.
-3. **Chaos Engine**: Programmable fault injector.
+3. **Chaos Engine**: Programmable fault injector (latency, timeouts, query degradation).
 4. **Load Generator**: Traffic simulation generating steady-state customer checkout flow.
-5. **Interactive Control Panel**: Web interface for triggering scenarios.
+5. **Interactive Control Panel**: Web interface for triggering failure modes and viewing telemetry.
 6. **Operational Scripts**: Active implementations of `seed.ts`, `break.ts`, and `reset.ts`.
 
 ---
 
-## Engineering Guidelines
+## License
 
-Please read [AGENTS.md](AGENTS.md) for monorepo guidelines, TypeScript standards, and contribution rules.
+Internal use only — Acme Corp demo environment.
