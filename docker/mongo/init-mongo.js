@@ -1,24 +1,36 @@
-/**
- * MongoDB Initialization Script for Chaos Demo Environment
- * Mounted into /docker-entrypoint-initdb.d/init-mongo.js
- *
- * Establishes the `acme` database context and empty collections.
- *
- * CRITICAL ARCHITECTURAL CONSTRAINTS:
- * 1. Do NOT seed 500,000 orders automatically at startup. Seeding is handled explicitly by scripts/seed.ts.
- * 2. Do NOT create a compound index on { userId: 1, status: 1 } for the `orders` collection.
- */
+// MongoDB initialization script for the Chaos demo environment
+// Runs on first container start via /docker-entrypoint-initdb.d/
 
-const targetDb = db.getSiblingDB('acme');
+// Ensure the acme database exists
+db = db.getSiblingDB('acme');
 
-// Ensure collections exist in the acme database
-if (!targetDb.getCollectionNames().includes('orders')) {
-  targetDb.createCollection('orders');
+// Create collections with sensible defaults
+if (!db.getCollectionInfos({ name: 'orders' }).length) {
+  db.createCollection('orders', { capped: false });
+}
+if (!db.getCollectionInfos({ name: 'webhook_events' }).length) {
+  db.createCollection('webhook_events', { capped: false });
 }
 
-if (!targetDb.getCollectionNames().includes('webhook_events')) {
-  targetDb.createCollection('webhook_events');
-}
+// ── Orders indexes ──────────────────────────────────────────────
+// Compound index for the duplicate-order lookup in the payment-confirmed webhook.
+// The handler queries { userId, status: "pending" } on every inbound event.
+db.orders.createIndex(
+  { userId: 1, status: 1 },
+  { name: 'idx_orders_user_status', background: true }
+);
 
-print('Chaos demo: Initialized acme database with empty orders and webhook_events collections.');
-print('Chaos demo: Verified NO supporting compound index { userId: 1, status: 1 } created.');
+// ── Webhook events indexes ──────────────────────────────────────
+// Unique index to prevent duplicate event processing
+db.webhook_events.createIndex(
+  { eventId: 1 },
+  { unique: true, name: 'idx_webhook_events_event_id' }
+);
+
+// Index for querying events by user
+db.webhook_events.createIndex(
+  { userId: 1 },
+  { name: 'idx_webhook_events_user_id' }
+);
+
+print('✅ Database initialization complete – indexes created on acme.orders and acme.webhook_events');
