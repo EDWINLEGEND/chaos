@@ -1,75 +1,32 @@
-import http from 'node:http';
-import { initDatabase, closeDatabase } from '@chaos/shared';
-import { loadConfig } from './config.js';
 import { createApp } from './app.js';
+import { loadConfig } from './config.js';
+import { getMongoClient } from '@chaos/shared';
 
-const startTime = Date.now();
 const config = loadConfig();
-
-// Attempt non-blocking startup database connection
-initDatabase({
-  uri: config.mongoUri,
-  dbName: config.mongoDatabase,
-  serverSelectionTimeoutMS: 3000,
-  connectTimeoutMS: 5000,
-})
-  .then(() => {
-    console.log(`[acme-checkout] Successfully connected to MongoDB at ${config.mongoDatabase}`);
-  })
-  .catch((err) => {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`[acme-checkout] Initial MongoDB connection not established (${msg}). Will connect on probe.`);
-  });
-
-// Create application request handler and server
+const startTime = Date.now();
 const app = createApp(config, startTime);
-const server = http.createServer(app);
 
-// Start listening
-server.listen(config.port, () => {
-  console.log(`[acme-checkout] Service listening on port ${config.port} (${config.nodeEnv})`);
-  console.log(`[acme-checkout] Configured database: ${config.mongoDatabase}`);
-});
+const PORT = config.port;
 
-// Graceful shutdown handling
-let isShuttingDown = false;
-async function shutdown(signal: string) {
-  if (isShuttingDown) return;
-  isShuttingDown = true;
+async function main(): Promise<void> {
+  // Connect to MongoDB
+  const client = await getMongoClient();
+  const db = client.db(config.database);
 
-  console.log(`\n[acme-checkout] Received ${signal}. Starting graceful shutdown...`);
+  // Ensure compound index on orders for the duplicate-check query
+  await db.collection('orders').createIndex(
+    { userId: 1, status: 1 },
+    { name: 'idx_orders_userId_status' }
+  );
 
-  const forceExitTimer = setTimeout(() => {
-    console.error('[acme-checkout] Graceful shutdown timed out. Forcing exit.');
-    process.exit(1);
-  }, 5000);
-  forceExitTimer.unref();
-
-  // Close HTTP server
-  server.close(async (err) => {
-    if (err) {
-      console.error('[acme-checkout] Error during server close:', err);
-    } else {
-      console.log('[acme-checkout] Server closed cleanly.');
-    }
-
-    // Close MongoDB connection pool
-    try {
-      await closeDatabase();
-      console.log('[acme-checkout] MongoDB connection pool closed.');
-    } catch (dbErr) {
-      console.error('[acme-checkout] Error closing MongoDB connection:', dbErr);
-    }
-
-    process.exit(err ? 1 : 0);
+  app.listen(PORT, () => {
+    console.log(`[${config.serviceName}] listening on port ${PORT}`);
+    console.log(`[${config.serviceName}] MongoDB connected to ${config.database}`);
+    console.log(`[${config.serviceName}] Index idx_orders_userId_status ensured on orders`);
   });
 }
 
-process.on('SIGINT', () => {
-  void shutdown('SIGINT');
+main().catch((err) => {
+  console.error('[checkout] Fatal startup error:', err);
+  process.exit(1);
 });
-process.on('SIGTERM', () => {
-  void shutdown('SIGTERM');
-});
-
-export { server, config, app };
