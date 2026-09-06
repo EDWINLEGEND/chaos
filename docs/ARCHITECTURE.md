@@ -13,7 +13,7 @@ In the context of the demo:
 ```
 Chaos/
 ├── apps/
-│   ├── checkout/             # Acme checkout HTTP service (hosts future deliberate bug)
+│   ├── checkout/             # Acme checkout HTTP service (order domain & webhook intake)
 │   ├── payment-provider/     # Fake external payment provider HTTP service
 │   └── chaos-web/            # Control panel frontend for triggering scenarios
 ├── packages/
@@ -36,7 +36,7 @@ Chaos/
 - A real Node.js/TypeScript HTTP checkout service.
 - Connects to MongoDB 7 (`acme` database).
 - Exposes order creation, status checking, and payment webhook receivers.
-- **Future Role**: This is where the deliberate production incident will live (unsupported query shape on unindexed order lookup during high-traffic webhook processing).
+- **Known Risk**: The duplicate-order lookup uses an unsupported query shape against an unindexed field, which degrades under high-traffic webhook processing.
 
 ### 2. `apps/payment-provider` (`fake-payment-provider`)
 - A lightweight HTTP service acting as an external payment gateway.
