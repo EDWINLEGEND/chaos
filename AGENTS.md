@@ -37,3 +37,15 @@ Always ensure that the full verification suite passes locally before committing 
 pnpm typecheck
 pnpm test
 ```
+
+## Any MongoDB query on a non-_id field must have a matching compound index; verify IXSCAN with explain() before merge. Catch blocks in webhook/event handlers must log errors and return HTTP 500, never silently return HTTP 200.
+
+**Why:** This incident was caused by two defects: (1) no compound index on {userId, status} causing COLLSCAN over 500k docs exceeding WEBHOOK_TIMEOUT_MS under load; (2) catch block swallowed errors and returned HTTP 200, preventing payment provider retries. Together ~850 of 1200 orders silently lost.
+
+**Derived from:** INC-001
+**Applies to:** apps/checkout/src/, scripts/seed.ts, scripts/reset.ts
+**Watch for:** pull_request, merge
+
+- No compound index on orders{userId, status}. Duplicate-check COLLSCAN on 500k docs: ~185-200ms single query, 900-1500ms under 50 concurrent workers, exceeding WEBHOOK_TIMEOUT_MS. _(github)_
+- Webhook catch block silently swallows errors, returns HTTP 200 {received: true} without logging. Payment provider won't retry. Causes silent divergence: payments = webhook events >> orders. _(github)_
+- Fix: (1) Add compound index {userId:1, status:1} on orders at startup + seed/reset scripts. (2) Catch block must log error and return HTTP 500 so payment provider retries. _(github)_
