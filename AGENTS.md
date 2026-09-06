@@ -37,3 +37,15 @@ Always ensure that the full verification suite passes locally before committing 
 pnpm typecheck
 pnpm test
 ```
+
+## Any find() or aggregate() query on the orders collection using {userId, status} must have a matching compound index. Verify with db.orders.getIndexes() and explain('queryStats') before merge; if no index covers the query shape, create one.
+
+**Why:** The payment-confirmed webhook's duplicate-check query {userId, status: "pending"} caused a COLLSCAN over 500k orders, leading to timeouts under concurrent load. A compound index on {userId: 1, status: 1} eliminates the collection scan and keeps query latency well under WEBHOOK_TIMEOUT_MS. This rule prevents future unindexed multi-field queries on orders.
+
+**Derived from:** INC-002
+**Applies to:** apps/checkout/src/**
+**Watch for:** find({userId, status}), aggregate([{ $match: { userId, status } }]), webhook-service.ts, order-service.ts
+
+- Commit 316438a changed webhook-handler to catch errors and return HTTP 200 {received:true} instead of 500. Error is swallowed without logging on timeout. _(github)_
+- orders collection (~500k docs) has no index on {userId, status}. Duplicate-check query causes COLLSCAN; saturated latency ~900-1500ms exceeds WEBHOOK_TIMEOUT_MS. _(github)_
+- Add compound index {userId:1, status:1} on orders at startup. Revert 316438a error handling to return HTTP 500 on timeout/error instead of swallowing with 200. _(github)_
