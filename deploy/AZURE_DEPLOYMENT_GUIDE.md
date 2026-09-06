@@ -95,7 +95,7 @@ chmod +x deploy/azure-vm-setup.sh
 2. Configures UFW firewall for ports 22, 80, 443, 3000, and 3003.
 3. Generates `.env` from `.env.example`.
 4. Executes `docker compose up -d --build` for all 6 containers.
-5. Verifies MongoDB health and seeds **500,000 unindexed orders** to prepare the deliberate `COLLSCAN` bottleneck.
+5. Verifies MongoDB health and seeds **500,000 orders** with no supporting index on the duplicate-check query shape.
 
 ---
 
