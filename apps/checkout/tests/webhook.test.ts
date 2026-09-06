@@ -348,7 +348,7 @@ describe('Payment-Confirmed Webhook Flow', () => {
     });
   });
 
-  describe('Deliberate Production Incident: Timeout & Swallowed Failure Flow', () => {
+  describe('Webhook timeout and swallowed-failure behaviour', () => {
     it('swallows duplicate-order query failure, returns HTTP 200 { received: true }, records webhook_event, skips order creation, and logs no errors', async () => {
       if (!isConnected) return;
 
