@@ -37,3 +37,15 @@ Always ensure that the full verification suite passes locally before committing 
 pnpm typecheck
 pnpm test
 ```
+
+## Any find/findOne on orders filtering non-_id fields must have a matching compound index. Verify with explain() before merge. Never silently swallow errors in webhook handlers.
+
+**Why:** The payment-confirmed webhook performed a duplicate-order lookup {userId, status:"pending"} on a 500k document collection with no supporting index, causing COLLSCAN timeouts. Errors from this failure were silently swallowed (HTTP 200, no logging), creating invisible divergence between payment events and orders.
+
+**Derived from:** INC-001
+**Applies to:** apps/checkout/src/services/webhook-service.ts, apps/checkout/src/handlers/webhook-handler.ts, scripts/seed.ts
+**Watch for:** findOne({userId, find({ status, console.log.*received: true
+
+- Unindexed duplicate check {userId, status:"pending"} on 500k orders causes COLLSCAN. Timeout errors silently swallowed — HTTP 200, no order creation, no logging. Missing compound index {userId:1, status:1}. _(github)_
+- Alex Morgan confirmed query shape {userId, status:"pending"} for duplicate-order lookup. Priya Nair recommended checking executionStats. No schema migration in deployment. _(slack)_
+- Add compound index {userId:1, status:1} on orders collection at checkout service startup, and propagate webhook-service errors as HTTP 500 instead of swallowing them silently. _(github)_
