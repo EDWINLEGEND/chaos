@@ -190,7 +190,7 @@ Errors:
 ## Webhook API Reference
 
 > [!IMPORTANT]
-> **Deliberate Production Incident**: Inbound events are durably persisted to `webhook_events`. Processing then performs an unindexed duplicate check `{ userId, status: "pending" }` against `orders` (which causes a MongoDB `COLLSCAN`). The operation is bounded by `WEBHOOK_TIMEOUT_MS` (default `2000` ms). If the query times out or throws a database error, the error is caught, **completely swallowed without logging**, and returns `HTTP 200 {"received": true}`. The order is **not** created, creating a silent divergence between recorded webhook events and created orders.
+> **Known Failure Mode**: Inbound events are durably persisted to `webhook_events`. Processing then performs an unindexed duplicate check `{ userId, status: "pending" }` against `orders` (which causes a MongoDB `COLLSCAN`). The operation is bounded by `WEBHOOK_TIMEOUT_MS` (default `2000` ms). If the query times out or throws a database error, the error is caught, **completely swallowed without logging**, and returns `HTTP 200 {"received": true}`. The order is **not** created, creating a silent divergence between recorded webhook events and created orders.
 
 ### Payment Confirmed Webhook
 **`POST /webhooks/payment-confirmed`**
@@ -242,7 +242,7 @@ When a pending order already exists for `userId` and the query completes within 
 ```
 * Note: The duplicate event is still durably recorded in `webhook_events` for reconciliation probes, but no second order is created in `orders`.
 
-#### Deliberate Timeout / Swallowed Error Path (`HTTP 200 OK`)
+#### Timeout / Swallowed Error Path (`HTTP 200 OK`)
 When the unindexed duplicate lookup exceeds `WEBHOOK_TIMEOUT_MS` (e.g. under load or slow query conditions) or fails:
 ```json
 {
