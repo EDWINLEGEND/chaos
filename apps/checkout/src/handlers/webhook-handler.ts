@@ -1,24 +1,24 @@
 import type http from 'node:http';
-import {
-  webhookEventsReceivedTotal,
-  ordersCreatedTotal,
-  silentOrderLossTotal,
-  estimatedRevenueLossCents,
-} from '@chaos/shared';
-import { parseJsonBody, sendJson, sendError, HttpError } from '../utils/http.js';
+import { parseJsonBody, sendJson, sendError } from '../utils/http.js';
 import {
   processPaymentConfirmedWebhook,
   type ValidatedWebhookInput,
 } from '../services/webhook-service.js';
-import type { CheckoutConfig } from '../config.js';
+import { loadConfig } from '../config.js';
 
 /**
  * Handles POST /webhooks/payment-confirmed
+ *
+ * 1. Validates payload structure at HTTP boundary.
+ * 2. Persists inbound event to `webhook_events`.
+ * 3. Performs duplicate-order lookup using indexed { userId, status: "pending" }.
+ * 4. Creates order if no duplicate exists.
+ * 5. Returns structured JSON with HTTP 200.
+ * 6. Propagates errors into HTTP 500 with logging.
  */
 export async function handlePaymentConfirmedWebhook(
   req: http.IncomingMessage,
-  res: http.ServerResponse,
-  config: CheckoutConfig
+  res: http.ServerResponse
 ): Promise<void> {
   try {
     const body = await parseJsonBody<Record<string, unknown>>(req);
@@ -34,79 +34,55 @@ export async function handlePaymentConfirmedWebhook(
       return;
     }
 
-    // Validate eventId (accepts either 'eventId' or 'id')
-    const rawEventId = body['eventId'] ?? body['id'];
-    if (typeof rawEventId !== 'string' || rawEventId.trim().length === 0) {
-      sendError(res, 400, 'INVALID_EVENT_ID', 'Field "eventId" (or "id") is required and must be a non-empty string');
-      return;
-    }
-    const eventId = rawEventId.trim();
-
-    // Validate paymentId
-    if (typeof body['paymentId'] !== 'string' || body['paymentId'].trim().length === 0) {
-      sendError(res, 400, 'INVALID_PAYMENT_ID', 'Field "paymentId" is required and must be a non-empty string');
-      return;
-    }
-    const paymentId = body['paymentId'].trim();
-
-    // Validate userId
-    if (typeof body['userId'] !== 'string' || body['userId'].trim().length === 0) {
-      sendError(res, 400, 'INVALID_USER_ID', 'Field "userId" is required and must be a non-empty string');
-      return;
-    }
-    const userId = body['userId'].trim();
-
-    // Validate amount (minor currency units, positive integer)
+    // Validate required fields
+    const eventId = body['id'];
+    const paymentId = body['paymentId'];
+    const userId = body['userId'];
     const amount = body['amount'];
+
     if (
-      typeof amount !== 'number' ||
-      !Number.isFinite(amount) ||
-      !Number.isInteger(amount) ||
-      amount <= 0
+      typeof eventId !== 'string' ||
+      typeof paymentId !== 'string' ||
+      typeof userId !== 'string' ||
+      typeof amount !== 'number'
     ) {
       sendError(
         res,
         400,
-        'INVALID_AMOUNT',
-        'Field "amount" must be a positive integer in minor currency units (e.g. 4999 for $49.99)'
+        'INVALID_PAYLOAD',
+        'Missing or invalid required fields: id, paymentId, userId, amount'
       );
       return;
     }
 
-    const validatedInput: ValidatedWebhookInput = {
+    const input: ValidatedWebhookInput = {
       eventId,
+      type: 'payment-confirmed',
       paymentId,
       userId,
       amount,
     };
 
-    const result = await processPaymentConfirmedWebhook(validatedInput, config.webhookTimeoutMs);
-
-    if ('received' in result && result.received === true) {
-      webhookEventsReceivedTotal.inc({ status: 'timeout_dropped' });
-      silentOrderLossTotal.inc();
-      estimatedRevenueLossCents.inc(validatedInput.amount);
-      sendJson(res, 200, { received: true });
-      return;
-    }
-
-    if ('created' in result && result.created === true) {
-      webhookEventsReceivedTotal.inc({ status: 'created' });
-      ordersCreatedTotal.inc();
-    } else if ('duplicate' in result && result.duplicate === true) {
-      webhookEventsReceivedTotal.inc({ status: 'duplicate' });
-    }
+    const config = loadConfig();
+    const result = await processPaymentConfirmedWebhook(config, input);
 
     sendJson(res, 200, {
       success: true,
-      data: result,
+      data: {
+        eventId: result.eventId,
+        orderId: result.orderId,
+        created: result.created,
+        duplicate: result.duplicate,
+      },
     });
   } catch (err) {
-    if (err instanceof HttpError) {
-      sendError(res, err.statusCode, err.code, err.message);
-      return;
-    }
-
-    sendError(res, 500, 'INTERNAL_SERVER_ERROR', 'Failed to process webhook event');
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error(`[webhook] payment-confirmed processing failed: ${errorMessage}`);
+    sendError(
+      res,
+      500,
+      'WEBHOOK_PROCESSING_ERROR',
+      `Webhook processing failed: ${errorMessage}`
+    );
   }
 }
